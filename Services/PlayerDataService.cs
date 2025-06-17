@@ -9,7 +9,7 @@ namespace SoVUtilities.Services;
 public static class PlayerDataService
 {
   // Path for saving player data
-  private static readonly string SaveDirectory = Path.Combine(Directory.GetCurrentDirectory(), "BepInEx", "config", "DevTools");
+  private static readonly string SaveDirectory = Path.Combine(Directory.GetCurrentDirectory(), "BepInEx", "config", "SoVUtilities");
   private static readonly string SavePath = Path.Combine(SaveDirectory, "sov_utilities_player_data.json");
 
   // Main data store - maps Steam IDs to player data
