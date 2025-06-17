@@ -1,9 +1,9 @@
 
 using Stunlock.Core;
 using Unity.Entities;
-using static SOVUtilities.Services.PlayerDataService;
+using static SoVUtilities.Services.PlayerDataService;
 
-namespace SOVUtilities.Services;
+namespace SoVUtilities.Services;
 
 public static class SoftlockService
 {

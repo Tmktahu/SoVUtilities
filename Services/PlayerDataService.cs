@@ -1,10 +1,10 @@
 using System.Text.Json;
-using SOVUtilities.Models;
+using SoVUtilities.Models;
 using ProjectM;
 using ProjectM.Network;
 using Unity.Entities;
 
-namespace SOVUtilities.Services;
+namespace SoVUtilities.Services;
 
 public static class PlayerDataService
 {

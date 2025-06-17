@@ -1,7 +1,7 @@
 using HarmonyLib;
 using ProjectM;
 
-namespace SOVUtilities.Patches;
+namespace SoVUtilities.Patches;
 
 [HarmonyPatch]
 internal static class InitializationPatch

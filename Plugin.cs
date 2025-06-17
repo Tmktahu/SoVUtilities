@@ -6,7 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using VampireCommandFramework;
 
-namespace SOVUtilities;
+namespace SoVUtilities;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("gg.deca.VampireCommandFramework")]

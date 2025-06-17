@@ -1,4 +1,4 @@
-# SOVUtilities
+# SoVUtilities
 
 A custom made VRising mod for the Shadows of Vardoran RP community. It includes a variety of custom built features for the server.
 

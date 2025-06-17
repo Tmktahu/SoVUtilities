@@ -1,4 +1,4 @@
-namespace SOVUtilities.Models;
+namespace SoVUtilities.Models;
 
 public class PlayerData
 {

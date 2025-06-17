@@ -10,7 +10,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-namespace SOVUtilities;
+namespace SoVUtilities;
 
 public static class VExtensions
 {

@@ -7,7 +7,7 @@ using ProjectM.Scripting;
 using ProjectM.Shared.Systems;
 using Unity.Entities;
 
-namespace SOVUtilities.Services;
+namespace SoVUtilities.Services;
 
 internal class SystemService(World world)
 {

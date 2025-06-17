@@ -2,7 +2,7 @@ using Unity.Entities;
 using ProjectM.Network;
 using Unity.Collections;
 
-namespace SOVUtilities.Services;
+namespace SoVUtilities.Services;
 
 public static class EntityService
 {

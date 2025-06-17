@@ -1,12 +1,12 @@
-﻿using SOVUtilities.Services;
+﻿using SoVUtilities.Services;
 using HarmonyLib;
 using ProjectM;
 using Unity.Collections;
 using Unity.Entities;
 using Stunlock.Core;
-using static SOVUtilities.Services.SoftlockService;
+using static SoVUtilities.Services.SoftlockService;
 
-namespace SOVUtilities.Patches;
+namespace SoVUtilities.Patches;
 
 [HarmonyPatch]
 internal static class VBloodSystemPatch

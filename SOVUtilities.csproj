@@ -3,14 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>SOVUtilities</AssemblyName>
+    <AssemblyName>SoVUtilities</AssemblyName>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <RestoreSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
     </RestoreSources>
-    <BepInExPluginGuid>io.vrising.SOVUtilities</BepInExPluginGuid>
+    <BepInExPluginGuid>io.vrising.SoVUtilities</BepInExPluginGuid>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 

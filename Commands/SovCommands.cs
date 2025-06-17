@@ -1,10 +1,10 @@
-using SOVUtilities.Services;
+using SoVUtilities.Services;
 using System.Text;
 using VampireCommandFramework;
-using static SOVUtilities.Services.EntityService;
+using static SoVUtilities.Services.EntityService;
 using Unity.Entities;
 
-namespace SOVUtilities.Commands;
+namespace SoVUtilities.Commands;
 
 [CommandGroup("sov")]
 internal static class SovCommands

@@ -2,9 +2,9 @@ using BepInEx.Logging;
 using ProjectM.Scripting;
 using Unity.Entities;
 using Unity.Collections;
-using SOVUtilities.Services;
+using SoVUtilities.Services;
 
-namespace SOVUtilities;
+namespace SoVUtilities;
 
 internal static class Core
 {
