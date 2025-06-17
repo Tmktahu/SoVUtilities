@@ -24,6 +24,8 @@ internal class Plugin : BasePlugin
 
   public override void Load()
   {
+    Instance = this;
+
     IsServer = Application.productName == "VRisingServer";
 
     if (!IsServer)

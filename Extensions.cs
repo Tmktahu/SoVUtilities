@@ -49,4 +49,24 @@ public static class VExtensions
   {
     return EntityManager.GetComponentData<T>(entity);
   }
+  public static ulong GetSteamId(this Entity entity)
+  {
+    if (entity.TryGetComponent(out PlayerCharacter playerCharacter))
+    {
+      return playerCharacter.UserEntity.GetUser().PlatformId;
+    }
+    else if (entity.TryGetComponent(out User user))
+    {
+      return user.PlatformId;
+    }
+
+    return 0;
+  }
+  public static User GetUser(this Entity entity)
+  {
+    if (entity.TryGetComponent(out User user)) return user;
+    else if (entity.TryGetComponent(out PlayerCharacter playerCharacter) && playerCharacter.UserEntity.TryGetComponent(out user)) return user;
+
+    return User.Empty;
+  }
 }

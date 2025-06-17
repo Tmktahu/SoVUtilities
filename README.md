@@ -1,22 +1,10 @@
 # SOVUtilities
 
-A barebones VRising mod template to build utilities upon.
-
-## Features
-- Minimal initialization setup
-- Basic Harmony patching
-- Core mod structure
+A custom made VRising mod for the Shadows of Vardoran RP community. It includes a variety of custom built features for the server.
 
 ## Installation
-1. Build the project
-2. Copy the DLL to your VRising BepInEx plugins folder
+1. Build the project or download the DLL from the Releases section.
+2. Copy the DLL to your VRising BepInEx plugins folder.
 
-## Building
-1. Open the solution in Visual Studio
-2. Build the project (Ctrl+Shift+B)
-
-## Customizing
-Add your utility functionality by:
-- Creating new patches in the Patches folder
-- Adding commands if needed
-- Extending the Core functionality
+## Credits
+- Chunks of the code and concepts are taken directly from Bloodcraft (https://github.com/mfoltz/Bloodcraft), licensed under CC BY-NC 4.0.
