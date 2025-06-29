@@ -89,32 +89,46 @@ internal static class SovCommands
 
     if (string.IsNullOrEmpty(playerName))
     {
-      playerEntity = ctx.Event.SenderCharacterEntity;
-    }
-    else
-    {
-      if (!TryFindPlayer(playerName, out playerEntity, out userEntity))
+      // playerEntity = ctx.Event.SenderCharacterEntity;
+      // playerName = ctx.Event.SenderCharacterEntity.GetUser().CharacterName.ToString();
+      // we want to list all tags of all players
+      Dictionary<string, List<string>> allTags = PlayerDataService.GetAllTags();
+      if (allTags.Count == 0)
       {
-        ctx.Reply($"Player '{playerName}' not found.");
+        ctx.Reply("No tags found in the system.");
         return;
       }
-    }
 
-    var playerData = PlayerDataService.GetPlayerData(playerEntity);
-    if (playerData == null || playerData.Tags.Count == 0)
-    {
-      ctx.Reply($"Character '{playerName}' doesn't have any tags.");
+      foreach (var kvp in allTags)
+      {
+        string currentPlayerName = kvp.Key;
+        var tags = kvp.Value;
+
+        tags = tags.Distinct().ToList(); // Remove duplicates
+
+        ctx.Reply($"Tags for character '{currentPlayerName}': {string.Join(", ", tags)}");
+      }
       return;
     }
 
-    var sb = new StringBuilder($"Tags for character '{playerName}': ");
-    for (int i = 0; i < playerData.Tags.Count; i++)
+    if (!TryFindPlayer(playerName, out playerEntity, out userEntity))
     {
-      if (i > 0) sb.Append(", ");
-      sb.Append(playerData.Tags[i]);
-    }
+      var playerData = PlayerDataService.GetPlayerData(playerEntity);
+      if (playerData == null || playerData.Tags.Count == 0)
+      {
+        ctx.Reply($"Character '{playerName}' doesn't have any tags.");
+        return;
+      }
 
-    ctx.Reply(sb.ToString());
+      var sb = new StringBuilder($"Tags for character '{playerName}': ");
+      for (int i = 0; i < playerData.Tags.Count; i++)
+      {
+        if (i > 0) sb.Append(", ");
+        sb.Append(playerData.Tags[i]);
+      }
+
+      ctx.Reply(sb.ToString());
+    }
   }
 
   // command that lists all valid tags

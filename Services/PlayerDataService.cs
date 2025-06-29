@@ -1,7 +1,5 @@
 using System.Text.Json;
 using SoVUtilities.Models;
-using ProjectM;
-using ProjectM.Network;
 using Unity.Entities;
 
 namespace SoVUtilities.Services;
@@ -11,7 +9,7 @@ public static class PlayerDataService
   // Path for saving player data
   private static readonly string SaveDirectory = Path.Combine(Directory.GetCurrentDirectory(), "BepInEx", "config", "SoVUtilities");
   private static readonly string SavePath = Path.Combine(SaveDirectory, "sov_utilities_player_data.json");
-
+  public static readonly string HUMAN_TAG = "human";
   // Main data store - maps Steam IDs to player data
   private static Dictionary<ulong, PlayerData> _playerData = new Dictionary<ulong, PlayerData>();
   // an array of valid tags that can be used
@@ -21,7 +19,8 @@ public static class PlayerDataService
     SoftlockService.COMPASS_TAG,
     SoftlockService.SHEPHERDS_TAG,
     SoftlockService.AEGIS_TAG,
-    SoftlockService.OAKSONG_TAG
+    SoftlockService.OAKSONG_TAG,
+    HUMAN_TAG
   };
 
   public static void Initialize()
@@ -33,54 +32,31 @@ public static class PlayerDataService
     LoadData();
   }
 
-  public static PlayerData GetPlayerData(ulong steamId, string playerName = null)
+  public static PlayerData GetPlayerData(Entity characterEntity)
   {
+    ulong steamId = characterEntity.GetSteamId();
+    string characterName = characterEntity.GetUser().CharacterName.ToString();
+
     if (!_playerData.TryGetValue(steamId, out var data))
     {
       data = new PlayerData
       {
         SteamId = steamId,
-        PlayerName = playerName ?? $"Player_{steamId}"
+        CharacterName = characterName
       };
       _playerData[steamId] = data;
-    }
-
-    // Update name if provided
-    if (playerName != null && data.PlayerName != playerName)
-    {
-      data.PlayerName = playerName;
-      data.LastUpdated = DateTime.UtcNow;
     }
 
     return data;
   }
 
-  public static PlayerData GetPlayerData(Entity entity)
+  public static bool AddPlayerTag(Entity characterEntity, string tag)
   {
-    ulong steamId = entity.GetSteamId();
-    if (steamId == 0)
-      return null;
-
-    string name = GetPlayerName(entity);
-    return GetPlayerData(steamId, name);
-  }
-
-  public static bool AddPlayerTag(ulong steamId, string tag)
-  {
-    var data = GetPlayerData(steamId);
+    var data = GetPlayerData(characterEntity);
     bool added = data.AddTag(tag);
     if (added)
       SaveData();
     return added;
-  }
-
-  public static bool AddPlayerTag(Entity entity, string tag)
-  {
-    ulong steamId = entity.GetSteamId();
-    if (steamId == 0)
-      return false;
-
-    return AddPlayerTag(steamId, tag);
   }
 
   public static bool RemovePlayerTag(ulong steamId, string tag)
@@ -160,32 +136,6 @@ public static class PlayerDataService
     }
   }
 
-  private static string GetPlayerName(Entity entity)
-  {
-    var entityManager = Core.EntityManager;
-
-    // For character entities, get the character name if possible
-    if (entityManager.HasComponent<PlayerCharacter>(entity))
-    {
-      Entity userEntity = entityManager.GetComponentData<PlayerCharacter>(entity).UserEntity;
-
-      if (entityManager.HasComponent<User>(userEntity))
-      {
-        var user = entityManager.GetComponentData<User>(userEntity);
-        return user.CharacterName.ToString();
-      }
-    }
-
-    // For user entities, get the user name
-    if (entityManager.HasComponent<User>(entity))
-    {
-      var user = entityManager.GetComponentData<User>(entity);
-      return user.CharacterName.ToString();
-    }
-
-    return null;
-  }
-
   public static string[] GetValidTags()
   {
     return ValidTags;
@@ -194,5 +144,12 @@ public static class PlayerDataService
   public static bool IsValidTag(string tag)
   {
     return ValidTags.Contains(tag);
+  }
+
+  public static Dictionary<string, List<string>> GetAllTags()
+  {
+    return _playerData.ToDictionary(
+        kvp => kvp.Value.CharacterName,
+        kvp => kvp.Value.Tags);
   }
 }

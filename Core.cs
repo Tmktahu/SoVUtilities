@@ -19,6 +19,9 @@ internal static class Core
 
   public static void Initialize()
   {
+    // Initialize player data service
+    PlayerDataService.Initialize();
+
     _initialized = true;
   }
 
