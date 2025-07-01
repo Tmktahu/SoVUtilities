@@ -16,6 +16,9 @@ public class PlayerData
   }
   public bool RemoveTag(string tag)
   {
+    if (!Tags.Contains(tag))
+      return false;
+
     bool removed = Tags.Remove(tag);
     return removed;
   }

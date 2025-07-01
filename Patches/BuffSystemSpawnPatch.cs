@@ -14,6 +14,11 @@ internal static class BuffSystemSpawnPatch
     static readonly PrefabGUID InCombatBuff = PrefabGUIDs.Buff_InCombat;
     static readonly PrefabGUID CombatStanceBuff = PrefabGUIDs.Buff_CombatStance;
     static readonly PrefabGUID ShapeshiftNormalFormBuff = PrefabGUIDs.AB_Shapeshift_NormalForm_Buff;
+    static readonly PrefabGUID WaygateSpawnBuff = PrefabGUIDs.AB_Interact_WaypointSpawn_Travel;
+    static readonly PrefabGUID WoodenCoffinSpawnBuff = PrefabGUIDs.AB_Interact_WoodenCoffinSpawn_Travel;
+    static readonly PrefabGUID StoneCoffinSpawnBuff = PrefabGUIDs.AB_Interact_StoneCoffinSpawn_Travel;
+    static readonly PrefabGUID TombCoffinSpawnBuff = PrefabGUIDs.AB_Interact_TombCoffinSpawn_Travel;
+
     static readonly EntityQuery _query = QueryService.BuffSpawnServerQuery;
 
     [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
@@ -70,6 +75,12 @@ internal static class BuffSystemSpawnPatch
                         {
                             BuffService.RemoveHideNameplateBuff(buffTarget);
                         }
+                    }
+
+                    if (buffPrefabGUID.Equals(WaygateSpawnBuff) || buffPrefabGUID.Equals(WoodenCoffinSpawnBuff) || buffPrefabGUID.Equals(StoneCoffinSpawnBuff) || buffPrefabGUID.Equals(TombCoffinSpawnBuff))
+                    {
+                        // we want to refresh the buffs for the player character
+                        BuffService.RefreshPlayerBuffs(buffTarget).Start();
                     }
                 }
             }

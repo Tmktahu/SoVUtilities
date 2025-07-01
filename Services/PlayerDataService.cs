@@ -12,16 +12,6 @@ public static class PlayerDataService
   public static readonly string HUMAN_TAG = "human";
   // Main data store - maps Steam IDs to player data
   private static Dictionary<ulong, PlayerData> _playerData = new Dictionary<ulong, PlayerData>();
-  // an array of valid tags that can be used
-  public static readonly string[] ValidTags =
-  {
-    SoftlockService.ADMIN_TAG,
-    SoftlockService.COMPASS_TAG,
-    SoftlockService.SHEPHERDS_TAG,
-    SoftlockService.AEGIS_TAG,
-    SoftlockService.OAKSONG_TAG,
-    HUMAN_TAG
-  };
 
   public static void Initialize()
   {
@@ -50,58 +40,10 @@ public static class PlayerDataService
     return data;
   }
 
-  public static bool AddPlayerTag(Entity characterEntity, string tag)
+  // function to get all player data
+  public static Dictionary<ulong, PlayerData> GetAllPlayerData()
   {
-    var data = GetPlayerData(characterEntity);
-    bool added = data.AddTag(tag);
-    if (added)
-      SaveData();
-    return added;
-  }
-
-  public static bool RemovePlayerTag(ulong steamId, string tag)
-  {
-    if (!_playerData.TryGetValue(steamId, out var data))
-      return false;
-
-    bool removed = data.RemoveTag(tag);
-    if (removed)
-      SaveData();
-    return removed;
-  }
-
-  public static bool RemovePlayerTag(Entity entity, string tag)
-  {
-    ulong steamId = entity.GetSteamId();
-    if (steamId == 0)
-      return false;
-
-    return RemovePlayerTag(steamId, tag);
-  }
-
-  public static bool HasPlayerTag(ulong steamId, string tag)
-  {
-    if (!_playerData.TryGetValue(steamId, out var data))
-      return false;
-
-    return data.HasTag(tag);
-  }
-
-  public static bool HasPlayerTag(Entity entity, string tag)
-  {
-    ulong steamId = entity.GetSteamId();
-    if (steamId == 0)
-      return false;
-
-    return HasPlayerTag(steamId, tag);
-  }
-
-  public static List<PlayerData> GetPlayersWithTag(string tag)
-  {
-    return _playerData
-        .Values
-        .Where(data => data.HasTag(tag))
-        .ToList();
+    return new Dictionary<ulong, PlayerData>(_playerData);
   }
 
   public static void SaveData()
@@ -134,22 +76,5 @@ public static class PlayerDataService
         _playerData = new Dictionary<ulong, PlayerData>();
       }
     }
-  }
-
-  public static string[] GetValidTags()
-  {
-    return ValidTags;
-  }
-
-  public static bool IsValidTag(string tag)
-  {
-    return ValidTags.Contains(tag);
-  }
-
-  public static Dictionary<string, List<string>> GetAllTags()
-  {
-    return _playerData.ToDictionary(
-        kvp => kvp.Value.CharacterName,
-        kvp => kvp.Value.Tags);
   }
 }
