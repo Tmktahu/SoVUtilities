@@ -39,13 +39,13 @@ internal static class StatChangeSystemPatch
                 // Core.Log.LogInfo($"[StatChangeSystem] StatChangeEvent Type: {statChangeEvent.StatType}");
                 if (statChangeEvent.StatType == StatType.Blood)
                 {
-                    Core.Log.LogInfo($"[StatChangeSystem] Got a Blood StatChangeEvent");
+                    // Core.Log.LogInfo($"[StatChangeSystem] Got a Blood StatChangeEvent");
                     Entity targetEntity = statChangeEvent.Entity;
 
                     // now we need to see if this is a human via its tag
                     if (HasPlayerTag(targetEntity, HUMAN_TAG))
                     {
-                        Core.Log.LogInfo($"[StatChangeSystem] Target Entity is Human");
+                        // Core.Log.LogInfo($"[StatChangeSystem] Target Entity is Human");
 
                         if (entityManager.HasComponent<BloodQualityChange>(statEntity))
                         {
@@ -60,7 +60,7 @@ internal static class StatChangeSystemPatch
 
                             if (bloodSourcePrefabGuid.Equals(VampireMale)) // && !bloodTypePrefabGuid.Equals(PrefabGUIDs.BloodType_None)) // we dont want this right now. it works, but not for our use case yet
                             {
-                                Core.Log.LogInfo($"[StatChangeSystem] Blood Source is VampireMale");
+                                // Core.Log.LogInfo($"[StatChangeSystem] Blood Source is VampireMale");
                                 // this happens when they drink a blood potion
                                 // if they eat a heart, the blood type is none, so we check for that
                                 // if they eat a heart we want to continue to lock the blood pool
@@ -71,7 +71,7 @@ internal static class StatChangeSystemPatch
                             // it has a blood component
                             Blood bloodComponent = entityManager.GetComponentData<Blood>(targetEntity);
                             float bloodValue = bloodComponent.Value;
-                            Core.Log.LogInfo($"[StatChangeSystem] Blood Value: {bloodValue}");
+                            // Core.Log.LogInfo($"[StatChangeSystem] Blood Value: {bloodValue}");
 
                             // Update the dictionary with the new blood value
                             entityBloodPoolValues[targetEntity] = bloodValue;
@@ -86,18 +86,18 @@ internal static class StatChangeSystemPatch
                             Entity sourceEntity = statChangeEvent.Source;
                             PrefabGUID sourceEntityPrefabGuid = entityManager.GetComponentData<PrefabGUID>(sourceEntity);
 
-                            Core.Log.LogInfo($"[StatChangeSystem] Source Entity PrefabGuid: {sourceEntityPrefabGuid}");
+                            // Core.Log.LogInfo($"[StatChangeSystem] Source Entity PrefabGuid: {sourceEntityPrefabGuid}");
 
                             if (sourceEntityPrefabGuid.Equals(VampireMale))
                             {
-                                Core.Log.LogInfo($"[StatChangeSystem] Blood Source is VampireMale");
+                                // Core.Log.LogInfo($"[StatChangeSystem] Blood Source is VampireMale");
                                 // this happens when they get a refresh from a blood soul
                                 // return true; // we actually want things to continue because we WANT a reset in this case
                             }
 
                             Blood bloodComponent = entityManager.GetComponentData<Blood>(targetEntity);
                             float bloodValue = bloodComponent.Value;
-                            Core.Log.LogInfo($"[StatChangeSystem] Blood Value: {bloodValue}");
+                            // Core.Log.LogInfo($"[StatChangeSystem] Blood Value: {bloodValue}");
 
                             // Update the dictionary with the new blood value
                             entityBloodPoolValues[targetEntity] = bloodValue;
@@ -138,7 +138,7 @@ internal static class StatChangeSystemPatch
                 }
                 entityBloodPoolValues.Clear();
 
-                Core.Log.LogInfo($"[StatChangeSystem] Queued {_pendingBloodChanges.Count} blood changes for safe processing");
+                // Core.Log.LogInfo($"[StatChangeSystem] Queued {_pendingBloodChanges.Count} blood changes for safe processing");
             }
 
             // Process the queued blood changes
@@ -178,7 +178,7 @@ internal static class StatChangeSystemPatch
                     var bloodComponent = entityManager.GetComponentData<Blood>(entity);
                     bloodComponent.Value = bloodValue;
                     entityManager.SetComponentData(entity, bloodComponent);
-                    Core.Log.LogInfo($"[StatChangeSystem] Safely processed blood change for entity: {entity}");
+                    // Core.Log.LogInfo($"[StatChangeSystem] Safely processed blood change for entity: {entity}");
                 }
 
                 processed++;
