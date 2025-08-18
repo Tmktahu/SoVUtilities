@@ -6,6 +6,7 @@ using System.Collections;
 using Unity.Entities;
 using UnityEngine;
 using User = ProjectM.Network.User;
+using SoVUtilities.Resources;
 
 namespace SoVUtilities.Patches;
 
@@ -28,7 +29,6 @@ internal static class ServerBootstrapSystemPatches
         Entity playerCharacter = user.LocalCharacter.GetEntityOnServer();
         bool exists = playerCharacter.Exists();
 
-        // Core.Log.LogInfo($"[ServerBootstrapSystem.OnUserConnectedPostfix] - PlayerCharacter: {playerCharacter} - Exists: {exists}");
         UpdatePlayerData(playerCharacter, exists).Start();
     }
     static IEnumerator UpdatePlayerData(Entity playerCharacter, bool exists)
@@ -37,8 +37,17 @@ internal static class ServerBootstrapSystemPatches
 
         if (exists)
         {
-            // Core.Log.LogInfo($"[ServerBootstrapSystem.OnUserConnectedPostfix] - Trying to refresh player buffs for {playerCharacter}");
             BuffService.RefreshPlayerBuffs(playerCharacter).Start();
+
+            // if they are wearing the razor hood, we want to apply the hide nameplate buff
+            if (EntityManager.HasComponent<Equipment>(playerCharacter))
+            {
+                Equipment equipment = EntityManager.GetComponentData<Equipment>(playerCharacter);
+                if (equipment.IsEquipped(PrefabGUIDs.Item_Headgear_RazerHood, out _))
+                {
+                    BuffService.AddHideNameplateBuff(playerCharacter);
+                }
+            }
         }
     }
 }

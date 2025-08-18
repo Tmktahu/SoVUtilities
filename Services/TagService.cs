@@ -13,12 +13,15 @@ public static class TagService
     public const string AFFLICTED = "afflicted";
     public const string BEHOLDEN = "beholden";
     public const string ENCASED = "encased";
+    public const string CONSUMED = "consumed";
+    public const string SEEDED = "seeded";
     public const string HIDE_NAMEPLATE = "hide_nameplate";
     public const string HUMAN = "human";
     public const string COMPASS = "compass";
     public const string SHEPHERDS = "shepherds";
     public const string AEGIS = "aegis";
     public const string OAKSONG = "oaksong";
+    public const string STYX = "styx";
   }
 
   // Check if a tag is valid
@@ -30,12 +33,15 @@ public static class TagService
       Tags.AFFLICTED => true,
       Tags.BEHOLDEN => true,
       Tags.ENCASED => true,
+      Tags.CONSUMED => true,
+      Tags.SEEDED => true,
       Tags.HIDE_NAMEPLATE => true,
       Tags.HUMAN => true,
       Tags.COMPASS => true,
       Tags.SHEPHERDS => true,
       Tags.AEGIS => true,
       Tags.OAKSONG => true,
+      Tags.STYX => true,
       _ => false
     };
   }
@@ -47,12 +53,15 @@ public static class TagService
     yield return Tags.AFFLICTED;
     yield return Tags.BEHOLDEN;
     yield return Tags.ENCASED;
+    yield return Tags.CONSUMED;
+    yield return Tags.SEEDED;
     yield return Tags.HIDE_NAMEPLATE;
     yield return Tags.HUMAN;
     yield return Tags.COMPASS;
     yield return Tags.SHEPHERDS;
     yield return Tags.AEGIS;
     yield return Tags.OAKSONG;
+    yield return Tags.STYX;
   }
 
   // we need to map tags to buff string IDs array
@@ -61,6 +70,8 @@ public static class TagService
     { Tags.AFFLICTED, new[] { BuffService.AfflictedBuffId } },
     { Tags.BEHOLDEN, new[] { BuffService.BeholdenBuffId } },
     { Tags.ENCASED, new[] { BuffService.EncasedBuffId } },
+    { Tags.CONSUMED, new[] { BuffService.ConsumedBuffId } },
+    { Tags.SEEDED, new[] { BuffService.SeededBuffId } },
     { Tags.HIDE_NAMEPLATE, new[] { BuffService.HideNameplateBuffId } },
     { Tags.HUMAN, new[] { BuffService.HumanBuffId } }
   };
@@ -131,6 +142,12 @@ public static class TagService
     {
       if (playerData.Tags.Count > 0)
       {
+        // if the name is empty or null, we set it to "Unknown"
+        if (string.IsNullOrEmpty(playerData.CharacterName))
+        {
+          playerData.CharacterName = "Unknown DAFUQ HAPPENED";
+        }
+
         allTags[playerData.CharacterName] = playerData.Tags;
       }
     }

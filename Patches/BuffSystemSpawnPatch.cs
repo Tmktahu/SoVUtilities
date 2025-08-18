@@ -45,38 +45,6 @@ internal static class BuffSystemSpawnPatch
 
                 if (isPlayerTarget)
                 {
-                    // Core.Log.LogInfo($"[BuffSystem_Spawn_Server] - BuffPrefabGuid: {buffPrefabGUID}");
-
-                    if (BuffService.HasHideNameplateBuff(buffTarget))
-                    {
-                        if (buffPrefabGUID.Equals(InCombatBuff) || buffPrefabGUID.Equals(CombatStanceBuff))
-                        {
-                            // Handle InCombatBuff logic
-                            Entity userEntity = buffTarget.GetUserEntity();
-                            Shapeshift shapeshift = EntityManager.GetComponentData<Shapeshift>(userEntity);
-                            bool isShapeshifted = shapeshift.IsShapeshifted;
-                            // Core.Log.LogInfo($"[BuffSystem_Spawn_Server] - IsShapeshifted: {isShapeshifted} | UserEntity: {userEntity} | BuffTarget: {buffTarget}");
-
-                            if (isShapeshifted)
-                            {
-                                // If this says yes, that means that are in combat in a shapeshifted form
-                                // we do NOT want to remove the nameplate thing because they are still in a form
-                            }
-                            else
-                            {
-                                // If this says no, that means that are in combat in a normal form
-                                // We need to remove the nameplate buff
-                                // Core.Log.LogInfo($"[BuffSystem_Spawn_Server] - Removing nameplate buff from shapeshifted form for user {userEntity}");
-                                BuffService.RemoveHideNameplateBuff(buffTarget);
-                            }
-                        }
-
-                        if (buffPrefabGUID.Equals(ShapeshiftNormalFormBuff))
-                        {
-                            BuffService.RemoveHideNameplateBuff(buffTarget);
-                        }
-                    }
-
                     if (buffPrefabGUID.Equals(WaygateSpawnBuff) || buffPrefabGUID.Equals(WoodenCoffinSpawnBuff) || buffPrefabGUID.Equals(StoneCoffinSpawnBuff) || buffPrefabGUID.Equals(TombCoffinSpawnBuff))
                     {
                         // we want to refresh the buffs for the player character

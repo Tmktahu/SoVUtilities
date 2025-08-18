@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Stunlock.Core;
+using System.Collections;
 using SoVUtilities.Resources;
 
 namespace SoVUtilities.Services.Buffs;
@@ -8,7 +9,7 @@ internal static class HideNameplateBuff
 {
   public static readonly PrefabGUID HideNameplateBuffBase = PrefabGUIDs.AB_Cursed_ToadKing_Spit_HideHUDCastBuff;
 
-  public static bool ApplyCustomBuff(Entity targetEntity)
+  public static IEnumerator ApplyCustomBuff(Entity targetEntity)
   {
     BuffService.ApplyBuff(targetEntity, HideNameplateBuffBase);
 
@@ -17,7 +18,7 @@ internal static class HideNameplateBuff
       BuffService.makeBuffPermanent(buff1Entity);
     }
 
-    return true;
+    yield return null;
   }
 
   public static bool RemoveBuff(Entity entity)

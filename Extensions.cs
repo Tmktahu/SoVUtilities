@@ -9,6 +9,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using System.Runtime.InteropServices;
 
 namespace SoVUtilities;
 
@@ -146,5 +147,53 @@ public static class VExtensions
   {
     NativeArray<T> components = entityQuery.ToComponentDataArray<T>(allocator);
     return new(components);
+  }
+  public static void Add<T>(this Entity entity)
+  {
+    var ct = new ComponentType(Il2CppType.Of<T>());
+    Core.EntityManager.AddComponent(entity, ct);
+  }
+  public unsafe static void Write<T>(this Entity entity, T componentData) where T : struct
+  {
+    // Get the ComponentType for T
+    var ct = new ComponentType(Il2CppType.Of<T>());
+
+    // Marshal the component data to a byte array
+    byte[] byteArray = StructureToByteArray(componentData);
+
+    // Get the size of T
+    int size = Marshal.SizeOf<T>();
+
+    // Create a pointer to the byte array
+    fixed (byte* p = byteArray)
+    {
+      // Set the component data
+      Core.EntityManager.SetComponentDataRaw(entity, ct.TypeIndex, p, size);
+    }
+  }
+  public static byte[] StructureToByteArray<T>(T structure) where T : struct
+  {
+    int size = Marshal.SizeOf(structure);
+    byte[] byteArray = new byte[size];
+    IntPtr ptr = Marshal.AllocHGlobal(size);
+
+    Marshal.StructureToPtr(structure, ptr, true);
+    Marshal.Copy(ptr, byteArray, 0, size);
+    Marshal.FreeHGlobal(ptr);
+
+    return byteArray;
+  }
+  public static void Destroy(this Entity entity, bool immediate = false)
+  {
+    if (!entity.Exists()) return;
+
+    if (immediate)
+    {
+      EntityManager.DestroyEntity(entity);
+    }
+    else
+    {
+      DestroyUtility.Destroy(EntityManager, entity);
+    }
   }
 }

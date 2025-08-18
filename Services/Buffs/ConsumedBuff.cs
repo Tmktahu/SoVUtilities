@@ -6,11 +6,12 @@ using UnityEngine;
 
 namespace SoVUtilities.Services.Buffs;
 
-internal static class EncasedBuff
+internal static class ConsumedBuff
 {
   public static readonly PrefabGUID EncasedBuffPrefabGUID = PrefabGUIDs.Buff_General_ChanceToCorruptBlood; // 1524978405
   public static readonly PrefabGUID EncasedBuffPrefabGUID2 = PrefabGUIDs.Unholy_Vampire_Buff_Bane; // 1688799287
   public static readonly PrefabGUID EncasedBuffPrefabGUID3 = PrefabGUIDs.AB_Blackfang_Shared_DrinkCorruption_Buff; // -1664518297
+  public static readonly PrefabGUID EncasedBuffPrefabGUID4 = PrefabGUIDs.Buff_Militia_InkCrawler_TrailEffect; // -1124645803
 
   public static IEnumerator ApplyCustomBuff(Entity targetEntity)
   {
@@ -39,6 +40,15 @@ internal static class EncasedBuff
       BuffService.makeBuffPermanent(buff3Entity);
     }
 
+    yield return new WaitForSeconds(0.1f);
+
+    BuffService.ApplyBuff(targetEntity, EncasedBuffPrefabGUID4);
+
+    if (BuffService.TryGetBuff(targetEntity, EncasedBuffPrefabGUID4, out Entity buff4Entity))
+    {
+      BuffService.makeBuffPermanent(buff4Entity);
+    }
+
     yield return null;
   }
 
@@ -48,6 +58,7 @@ internal static class EncasedBuff
     removed |= BuffService.RemoveBuff(entity, EncasedBuffPrefabGUID);
     removed |= BuffService.RemoveBuff(entity, EncasedBuffPrefabGUID2);
     removed |= BuffService.RemoveBuff(entity, EncasedBuffPrefabGUID3);
+    removed |= BuffService.RemoveBuff(entity, EncasedBuffPrefabGUID4);
 
     return removed;
   }
@@ -58,6 +69,7 @@ internal static class EncasedBuff
     hasBuff |= BuffService.HasBuff(entity, EncasedBuffPrefabGUID);
     hasBuff |= BuffService.HasBuff(entity, EncasedBuffPrefabGUID2);
     hasBuff |= BuffService.HasBuff(entity, EncasedBuffPrefabGUID3);
+    hasBuff |= BuffService.HasBuff(entity, EncasedBuffPrefabGUID4);
 
     return hasBuff;
   }

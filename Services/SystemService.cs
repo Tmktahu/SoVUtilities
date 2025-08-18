@@ -118,6 +118,11 @@ internal class SystemService(World world)
   ServantPowerSystem _servantPowerSystem;
   public ServantPowerSystem ServantPowerSystem => _servantPowerSystem ??= GetSystem<ServantPowerSystem>();
 
+  SystemMessageSystem _systemMessageSystem;
+  public SystemMessageSystem SystemMessageSystem => _systemMessageSystem ??= GetSystem<SystemMessageSystem>();
+  SetMapMarkerSystem _setMapMarkerSystem;
+  public SetMapMarkerSystem SetMapMarkerSystem => _setMapMarkerSystem ??= GetSystem<SetMapMarkerSystem>();
+
   NetworkIdSystem.Singleton _networkIdSystem_Singleton;
   public NetworkIdSystem.Singleton NetworkIdSystem
   {

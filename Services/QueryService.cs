@@ -4,6 +4,7 @@ using ProjectM;
 using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
+using ProjectM.Network;
 
 namespace SoVUtilities.Services;
 
@@ -15,6 +16,7 @@ internal static class QueryService
     static readonly EntityQuery _updateBuffsBufferDestroyQuery;
     static readonly EntityQuery _buffSpawnServerQuery;
     static readonly EntityQuery _scriptSpawnServerQuery;
+    static readonly EntityQuery _playerCharactersQuery;
     static QueryService()
     {
         _updateBuffsBufferDestroyQuery = ModifyEntityQuery(
@@ -31,10 +33,15 @@ internal static class QueryService
             SystemService.ScriptSpawnServer.EntityQueries[0],
             [ComponentType.ReadOnly(Il2CppType.Of<Buff>()), ComponentType.ReadOnly(Il2CppType.Of<EntityOwner>())]
         );
+
+        _playerCharactersQuery = EntityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<PlayerCharacter>()
+        );
     }
     public static EntityQuery UpdateBuffsBufferDestroyQuery => _updateBuffsBufferDestroyQuery;
     public static EntityQuery BuffSpawnServerQuery => _buffSpawnServerQuery;
     public static EntityQuery ScriptSpawnServerQuery => _scriptSpawnServerQuery;
+    public static EntityQuery PlayerCharactersQuery => _playerCharactersQuery;
     public static EntityQuery ModifyEntityQuery(EntityQuery originalQuery, ComponentType[] includeComponents = null, ComponentType[] excludeComponents = null)
     {
         /*

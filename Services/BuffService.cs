@@ -18,7 +18,7 @@ internal static class BuffService
   static ServerGameManager ServerGameManager => Core.ServerGameManager;
   static EntityManager EntityManager => Core.EntityManager;
 
-  public static readonly PrefabGUID HumanBuffBase = PrefabGUIDs.SetBonus_Silk_Twilight;
+  static readonly PrefabGUID razerHood = PrefabGUIDs.Item_Headgear_RazerHood;
   public static readonly PrefabGUID HideNameplateBuffGuid = PrefabGUIDs.AB_Cursed_ToadKing_Spit_HideHUDCastBuff;
 
   public static string HumanBuffId = "human_buff";
@@ -26,13 +26,17 @@ internal static class BuffService
   public static string AfflictedBuffId = "afflicted_buff";
   public static string BeholdenBuffId = "beholden_buff";
   public static string EncasedBuffId = "encased_buff";
+  public static string ConsumedBuffId = "consumed_buff";
+  public static string SeededBuffId = "seeded_buff";
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
-    // { HumanBuffId, new HumanCustomBuff() },
+    { HumanBuffId, new HumanCustomBuff() },
     { HideNameplateBuffId, new HideNameplateCustomBuff() },
     { AfflictedBuffId, new AfflictedCustomBuff() },
     { BeholdenBuffId, new BeholdenCustomBuff() },
-    { EncasedBuffId, new EncasedCustomBuff() }
+    { EncasedBuffId, new EncasedCustomBuff() },
+    { ConsumedBuffId, new ConsumedCustomBuff() },
+    { SeededBuffId, new SeededCustomBuff() }
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)
@@ -58,27 +62,20 @@ internal static class BuffService
   public static IEnumerator RefreshPlayerBuffs(Entity playerCharacter)
   {
     // First, remove all buffs
-    // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Removing all buffs from {playerCharacter}");
     foreach (var buffId in AvailableBuffs.Keys)
     {
       RemoveBuffFromPlayer(playerCharacter, buffId);
     }
 
-    // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Waiting one second.");
     // Wait 1 second for all cleanups to complete
     yield return new WaitForSeconds(1f);
 
     // Then add all buffs back
-    // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Adding all buffs back to {playerCharacter}");
     foreach (var buffId in AvailableBuffs.Keys)
     {
-      // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Checking if player should have buff {buffId}.");
       bool shouldHaveBuff = TagService.ShouldHaveBuff(playerCharacter, buffId);
-      // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Player {playerCharacter} should have buff {buffId}: {shouldHaveBuff}");
-
       if (shouldHaveBuff)
       {
-        // Core.Log.LogInfo($"[BuffService.RefreshPlayerBuffs] - Adding buff {buffId} to {playerCharacter}");
         // we only add the buff if the player should have it
         AddCustomBuffToPlayer(playerCharacter, buffId);
       }
@@ -87,7 +84,6 @@ internal static class BuffService
 
   public static void AddHideNameplateBuff(Entity entity)
   {
-    // Core.Log.LogInfo($"Adding hide nameplate buff to entity {entity}.");
     ApplyBuff(entity, HideNameplateBuffGuid);
 
     if (!TryGetBuff(entity, HideNameplateBuffGuid, out Entity buffEntity))
@@ -98,16 +94,24 @@ internal static class BuffService
     makeBuffPermanent(buffEntity);
   }
 
-  public static void RemoveHideNameplateBuff(Entity entity)
+  public static void RemoveHideNameplateBuff(Entity entity, bool bypass = false)
   {
     // if they should have this buff via tags, we don't remove it
     if (TagService.ShouldHaveBuff(entity, HideNameplateBuffId))
     {
-      // Core.Log.LogInfo($"Entity {entity} should have hide nameplate buff via tags. Not removing it.");
       return;
     }
 
-    // Core.Log.LogInfo($"Removing hide nameplate buff from entity {entity}.");
+    // we also want to check if they have the razor hood equipped
+    if (EntityManager.HasComponent<Equipment>(entity) && !bypass)
+    {
+      Equipment equipment = EntityManager.GetComponentData<Equipment>(entity);
+      if (equipment.IsEquipped(razerHood, out var _))
+      {
+        return; // If the player has the Razer Hood equipped, we do not remove the hide nameplate buff
+      }
+    }
+
     if (TryGetBuff(entity, HideNameplateBuffGuid, out Entity buffEntity))
     {
       DestroyBuff(buffEntity);
@@ -117,13 +121,11 @@ internal static class BuffService
   public static bool HasHideNameplateBuff(Entity entity)
   {
     bool hasBuff = HasBuff(entity, HideNameplateBuffGuid);
-    // Core.Log.LogInfo($"Entity {entity} has hide nameplate buff: {hasBuff}");
     return hasBuff;
   }
 
   public static void makeBuffPermanent(Entity buffEntity)
   {
-    // Core.Log.LogInfo($"Making buff {buffEntity} permanent.");
     // Remove components that would cause the buff to be removed
     EntityManager.RemoveComponent<RemoveBuffOnGameplayEvent>(buffEntity);
     EntityManager.RemoveComponent<RemoveBuffOnGameplayEventEntry>(buffEntity);
@@ -134,7 +136,6 @@ internal static class BuffService
     // Set lifetime to permanent
     if (EntityManager.HasComponent<LifeTime>(buffEntity))
     {
-      // Core.Log.LogInfo($"Setting lifetime of buff {buffEntity} to permanent.");
       var lifeTime = EntityManager.GetComponentData<LifeTime>(buffEntity);
       lifeTime.Duration = 0f;
       lifeTime.EndAction = LifeTimeEndAction.None;
@@ -167,7 +168,6 @@ internal static class BuffService
   public static bool RemoveBuff(Entity entity, PrefabGUID buffPrefabGuid)
   {
     TryRemoveBuff(entity, buffPrefabGuid);
-    // Core.Log.LogInfo($"Removed buff of type {buffPrefabGuid} from entity {entity}.");
     return true;
   }
 
@@ -195,7 +195,6 @@ internal static class BuffService
   {
     if (TryGetCustomBuff(buffId, out var customBuff))
     {
-      // Core.Log.LogInfo($"[BuffService.AddCustomBuffToPlayer] - Applying custom buff {buffId} to {characterEntity}");
       customBuff.ApplyCustomBuff(characterEntity);
     }
     else
@@ -218,5 +217,30 @@ internal static class BuffService
   public static bool TryGetCustomBuff(string buffId, out ICustomBuff customBuff)
   {
     return AvailableBuffs.TryGetValue(buffId, out customBuff);
+  }
+
+  // we want a function that gets a list of players that have the hide nameplate buff within a certain radius
+  public static List<Entity> NearbyPlayersHaveHideNameplateBuff(Entity playerEntity, float radius = 10f)
+  {
+    List<Entity> nearbyUserEntities = EntityService.GetNearbyUserEntities(playerEntity, radius);
+    List<Entity> playersWithBuff = new List<Entity>();
+    foreach (var entity in nearbyUserEntities)
+    {
+      // we need to get the actual character entity from the user component
+      if (!EntityManager.HasComponent<User>(entity))
+      {
+        continue;
+      }
+
+      User userData = EntityManager.GetComponentData<User>(entity);
+      Entity characterEntity = userData.LocalCharacter._Entity;
+
+      if (HasHideNameplateBuff(characterEntity))
+      {
+        playersWithBuff.Add(characterEntity);
+      }
+    }
+
+    return playersWithBuff;
   }
 }

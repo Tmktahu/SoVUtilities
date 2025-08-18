@@ -5,6 +5,7 @@ using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 using VampireCommandFramework;
+using static SoVUtilities.Services.ConfigService.ConfigInitialization;
 
 namespace SoVUtilities;
 
@@ -34,6 +35,8 @@ internal class Plugin : BasePlugin
       return;
     }
     _harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
+
+    InitializeConfig();
 
     CommandRegistry.RegisterAll();
 

@@ -27,6 +27,12 @@ public static class PlayerDataService
     ulong steamId = characterEntity.GetSteamId();
     string characterName = characterEntity.GetUser().CharacterName.ToString();
 
+    // if the character name is empty or null, we set it to "Unknown"
+    if (string.IsNullOrEmpty(characterName))
+    {
+      characterName = "Unknown DAFUQ HAPPENED";
+    }
+
     if (!_playerData.TryGetValue(steamId, out var data))
     {
       data = new PlayerData

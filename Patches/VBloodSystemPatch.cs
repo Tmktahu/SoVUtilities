@@ -42,7 +42,6 @@ internal static class VBloodSystemPatch
                 if (IsBossSoftlocked(playerCharacter, vBloodGuid))
                 {
                     eventsToRemove.Add(i);
-                    // Core.Log.LogInfo($"Prevented softlocked VBlood consumption for player entity {playerCharacter}");
                 }
             }
 
