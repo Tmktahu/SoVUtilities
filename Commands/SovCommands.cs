@@ -216,6 +216,47 @@ internal static class SovCommands
     ctx.Reply("Your nameplate has been revealed.");
   }
 
+  // command for players to request a blood potion once per day
+  [Command("drawblood", "Request your daily blood potion", adminOnly: false)]
+  public static void BloodPotionCommand(ChatCommandContext ctx)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    if (playerEntity == null)
+    {
+      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
+      return;
+    }
+
+    // Check if player has human tag first
+    var playerData = PlayerDataService.GetPlayerData(playerEntity);
+    if (!playerData.HasTag(PlayerDataService.HUMAN_TAG))
+    {
+      ctx.Reply("You are not a human. Doofus.");
+      return;
+    }
+
+    bool success = ItemService.GiveHumanBloodPotion(playerEntity, out TimeSpan? timeRemaining);
+    if (success)
+    {
+      // if it was a success, then they got their blood potion
+      ctx.Reply("You have drawn your blood into a bottle.");
+    }
+    else if (timeRemaining.HasValue && timeRemaining.Value > TimeSpan.Zero)
+    {
+      // otherwise it was a failure, but we have a time remaining that is greater than zero
+      // Format the time remaining nicely
+      var hours = (int)timeRemaining.Value.TotalHours;
+      var minutes = timeRemaining.Value.Minutes;
+      var seconds = timeRemaining.Value.Seconds;
+      ctx.Reply($"You must wait {hours}:{minutes}:{seconds} before drawing blood again.");
+    }
+    else
+    {
+      // otherwise they COULD get a potion but something went wrong, check inventory?
+      ctx.Reply("Failed to draw blood. Is your inventory full?");
+    }
+  }
+
   // command to list nearby players with hide nameplate buff
   [Command("who", "List nearby players with hide nameplate buff", adminOnly: true)]
   public static void ListNearbyPlayersWithHideNameplateCommand(ChatCommandContext ctx, float radius = 10f)

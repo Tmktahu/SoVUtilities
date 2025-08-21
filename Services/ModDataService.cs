@@ -98,7 +98,7 @@ public static class ModDataService
     {
       // Create a copy of ModData for saving with translated softlock data
       var dataToSave = new Dictionary<string, object>(ModData);
-      
+
       // Translate softlock mapping from PrefabGUID[] to boss key names for JSON storage
       if (dataToSave.ContainsKey(SOFTLOCK_MAPPING_KEY))
       {
@@ -159,14 +159,14 @@ public static class ModDataService
   private static Dictionary<string, string[]> TranslateSoftlockMappingForSave(Dictionary<string, PrefabGUID[]> mapping)
   {
     var result = new Dictionary<string, string[]>();
-    
+
     // Get available bosses from SoftlockService
     var availableBosses = SoftlockService.AvailableBosses;
-    
+
     foreach (var kvp in mapping)
     {
       var bossKeys = new List<string>();
-      
+
       foreach (var prefabGuid in kvp.Value)
       {
         // Find the boss key for this PrefabGUID
@@ -180,10 +180,10 @@ public static class ModDataService
           Core.Log.LogWarning($"Could not find boss key for PrefabGUID when saving: {prefabGuid}");
         }
       }
-      
+
       result[kvp.Key] = bossKeys.ToArray();
     }
-    
+
     return result;
   }
 
@@ -195,22 +195,22 @@ public static class ModDataService
   private static Dictionary<string, PrefabGUID[]> TranslateSoftlockMappingForLoad(object rawData)
   {
     var result = new Dictionary<string, PrefabGUID[]>();
-    
+
     try
     {
       // Get available bosses from SoftlockService
       var availableBosses = SoftlockService.AvailableBosses;
-      
+
       if (rawData is JsonElement jsonElement)
       {
         var stringMapping = JsonSerializer.Deserialize<Dictionary<string, string[]>>(jsonElement);
-        
+
         if (stringMapping != null)
         {
           foreach (var kvp in stringMapping)
           {
             var prefabGuids = new List<PrefabGUID>();
-            
+
             foreach (var bossKey in kvp.Value)
             {
               if (availableBosses.TryGetValue(bossKey, out PrefabGUID prefabGuid))
@@ -222,7 +222,7 @@ public static class ModDataService
                 Core.Log.LogWarning($"Could not find PrefabGUID for boss key when loading: {bossKey}");
               }
             }
-            
+
             result[kvp.Key] = prefabGuids.ToArray();
           }
         }
@@ -239,7 +239,7 @@ public static class ModDataService
     {
       Core.Log.LogError($"Failed to translate softlock mapping on load: {ex.Message}");
     }
-    
+
     return result;
   }
 }
