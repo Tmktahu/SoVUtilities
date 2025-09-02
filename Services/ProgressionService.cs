@@ -4,6 +4,7 @@ using Unity.Entities;
 using ProjectM;
 using SoVUtilities.Resources;
 using ProjectM.Network;
+using SoVUtilities.Services.Bosses;
 
 namespace SoVUtilities.Services;
 
@@ -108,29 +109,86 @@ public static class ProgressionService
     }
   };
 
-  public static string CHRISTINA_KEY = "christina";
-  public static string BEN_KEY = "ben";
-  public static string FOULROT_KEY = "foulrot";
-  public static string AZARIEL_KEY = "azariel";
-  public static string DRACULA_KEY = "dracula";
-
   // we want a dictionary of string to BossProgressionData
   public static readonly Dictionary<string, BossProgressionData> BossProgressions = new Dictionary<string, BossProgressionData>
   {
-    { CHRISTINA_KEY, CHRISTINA_PROGRESS },
-    { BEN_KEY, BEN_PROGRESS },
-    { FOULROT_KEY, FOULROT_PROGRESS },
-    { AZARIEL_KEY, AZARIEL_PROGRESS },
+    { BossConstants.CHRISTINA_KEY, CHRISTINA_PROGRESS },
+    { BossConstants.BEN_KEY, BEN_PROGRESS },
+    { BossConstants.FOULROT_KEY, FOULROT_PROGRESS },
+    { BossConstants.AZARIEL_KEY, AZARIEL_PROGRESS },
   };
 
   // we want a dictionary of string to PrefabGUID
   public static readonly Dictionary<string, PrefabGUID> BossProgressionPrefabGUIDs = new Dictionary<string, PrefabGUID>
   {
-    { CHRISTINA_KEY, PrefabGUIDs.CHAR_Militia_Nun_VBlood },
-    { BEN_KEY, PrefabGUIDs.CHAR_Villager_CursedWanderer_VBlood },
-    { FOULROT_KEY, PrefabGUIDs.CHAR_Undead_ZealousCultist_VBlood },
-    { AZARIEL_KEY, PrefabGUIDs.CHAR_ChurchOfLight_Cardinal_VBlood },
-    { DRACULA_KEY, PrefabGUIDs.CHAR_Vampire_Dracula_VBlood }
+    // act 1 bosses
+    { BossConstants.ALPHA_WOLF_KEY, PrefabGUIDs.CHAR_Forest_Wolf_VBlood },
+    { BossConstants.KEELY_KEY, PrefabGUIDs.CHAR_Bandit_Frostarrow_VBlood },
+    { BossConstants.ERROL_KEY, PrefabGUIDs.CHAR_Bandit_StoneBreaker_VBlood },
+    { BossConstants.RUFUS_KEY, PrefabGUIDs.CHAR_Bandit_Foreman_VBlood },
+    { BossConstants.GRAYSON_KEY, PrefabGUIDs.CHAR_Bandit_Stalker_VBlood },
+    { BossConstants.GORESWINE_KEY, PrefabGUIDs.CHAR_Undead_BishopOfDeath_VBlood },
+    { BossConstants.LIDIA_KEY, PrefabGUIDs.CHAR_Bandit_Chaosarrow_VBlood },
+    { BossConstants.CLIVE_KEY, PrefabGUIDs.CHAR_Bandit_Bomber_VBlood },
+    { BossConstants.NIBBLES_KEY, PrefabGUIDs.CHAR_Vermin_DireRat_VBlood },
+    { BossConstants.FINN_KEY, PrefabGUIDs.CHAR_Bandit_Fisherman_VBlood },
+    { BossConstants.POLORA_KEY, PrefabGUIDs.CHAR_Poloma_VBlood },
+    { BossConstants.KODIA_KEY, PrefabGUIDs.CHAR_Forest_Bear_Dire_Vblood },
+    { BossConstants.NOCHOLAUS_KEY, PrefabGUIDs.CHAR_Undead_Priest_VBlood },
+    { BossConstants.QUINCEY_KEY, PrefabGUIDs.CHAR_Bandit_Tourok_VBlood },
+    // act 2 bosses
+    { BossConstants.BEATRICE_KEY, PrefabGUIDs.CHAR_Villager_Tailor_VBlood },
+    { BossConstants.VINCENT_KEY, PrefabGUIDs.CHAR_Militia_Guard_VBlood },
+    { BossConstants.CHRISTINA_KEY, PrefabGUIDs.CHAR_Militia_Nun_VBlood },
+    { BossConstants.TRISTAN_KEY, PrefabGUIDs.CHAR_VHunter_Leader_VBlood },
+    { BossConstants.ERWIN_KEY, PrefabGUIDs.CHAR_Militia_Fabian_VBlood },
+    { BossConstants.KRIIG_KEY, PrefabGUIDs.CHAR_Undead_Leader_Vblood },
+    { BossConstants.LEANDRA_KEY, PrefabGUIDs.CHAR_Undead_BishopOfShadows_VBlood },
+    { BossConstants.MAJA_KEY, PrefabGUIDs.CHAR_Militia_Scribe_VBlood },
+    { BossConstants.BANE_KEY, PrefabGUIDs.CHAR_Undead_Infiltrator_VBlood },
+    { BossConstants.GRETHEL_KEY, PrefabGUIDs.CHAR_Militia_Glassblower_VBlood },
+    { BossConstants.MEREDITH_KEY, PrefabGUIDs.CHAR_Militia_Longbowman_LightArrow_Vblood },
+    { BossConstants.TERAH_KEY, PrefabGUIDs.CHAR_Geomancer_Human_VBlood },
+    { BossConstants.FROSTMAW_KEY, PrefabGUIDs.CHAR_Wendigo_VBlood },
+    { BossConstants.ELENA_KEY, PrefabGUIDs.CHAR_Vampire_IceRanger_VBlood },
+    { BossConstants.GAIUS_KEY, PrefabGUIDs.CHAR_Undead_ArenaChampion_VBlood },
+    { BossConstants.CASSIUS_KEY, PrefabGUIDs.CHAR_Vampire_HighLord_VBlood },
+    { BossConstants.JADE_KEY, PrefabGUIDs.CHAR_VHunter_Jade_VBlood },
+    { BossConstants.RAZIEL_KEY, PrefabGUIDs.CHAR_Militia_BishopOfDunley_VBlood },
+    { BossConstants.OCTAVIAN_KEY, PrefabGUIDs.CHAR_Militia_Leader_VBlood },
+    // act 3 bosses
+    { BossConstants.ZIVA_KEY, PrefabGUIDs.CHAR_Gloomrot_Iva_VBlood },
+    { BossConstants.DOMINA_KEY, PrefabGUIDs.CHAR_Gloomrot_Voltage_VBlood },
+    { BossConstants.ANGRAM_KEY, PrefabGUIDs.CHAR_Gloomrot_Purifier_VBlood },
+    { BossConstants.UNGORA_KEY, PrefabGUIDs.CHAR_Spider_Queen_VBlood },
+    { BossConstants.BEN_KEY, PrefabGUIDs.CHAR_Villager_CursedWanderer_VBlood },
+    { BossConstants.FOULROT_KEY, PrefabGUIDs.CHAR_Undead_ZealousCultist_VBlood },
+    { BossConstants.ALBERT_KEY, PrefabGUIDs.CHAR_Cursed_ToadKing_VBlood },
+    { BossConstants.WILFRED_KEY, PrefabGUIDs.CHAR_WerewolfChieftain_Human }, // MIGHT BE INCORRECT
+    { BossConstants.CYRIL_KEY, PrefabGUIDs.CHAR_Undead_CursedSmith_VBlood },
+    // act 4 bosses
+    { BossConstants.MAGNUS_KEY, PrefabGUIDs.CHAR_ChurchOfLight_Overseer_VBlood },
+    { BossConstants.BARON_KEY, PrefabGUIDs.CHAR_ChurchOfLight_Sommelier_VBlood },
+    { BossConstants.MORIAN_KEY, PrefabGUIDs.CHAR_Harpy_Matriarch_VBlood },
+    { BossConstants.MAIRWYN_KEY, PrefabGUIDs.CHAR_ArchMage_VBlood },
+    { BossConstants.HENRY_KEY, PrefabGUIDs.CHAR_Gloomrot_TheProfessor_VBlood },
+    { BossConstants.JAKIRA_KEY, PrefabGUIDs.CHAR_Blackfang_Livith_VBlood },
+    { BossConstants.STAVROS_KEY, PrefabGUIDs.CHAR_Blackfang_CarverBoss_VBlood },
+    { BossConstants.LUCILE_KEY, PrefabGUIDs.CHAR_Blackfang_Lucie_VBlood },
+    { BossConstants.MATKA_KEY, PrefabGUIDs.CHAR_Cursed_Witch_VBlood },
+    { BossConstants.TERRORCLAW_KEY, PrefabGUIDs.CHAR_Winter_Yeti_VBlood },
+    { BossConstants.AZARIEL_KEY, PrefabGUIDs.CHAR_ChurchOfLight_Cardinal_VBlood },
+    { BossConstants.VOLTATIA_KEY, PrefabGUIDs.CHAR_Gloomrot_RailgunSergeant_VBlood },
+    { BossConstants.SIMON_KEY, PrefabGUIDs.CHAR_VHunter_CastleMan },
+    { BossConstants.DANTOS_KEY, PrefabGUIDs.CHAR_Blackfang_Valyr_VBlood },
+    { BossConstants.STYX_KEY, PrefabGUIDs.CHAR_BatVampire_VBlood },
+    { BossConstants.GORECRUSHER_KEY, PrefabGUIDs.CHAR_Cursed_MountainBeast_VBlood },
+    { BossConstants.VALENCIA_KEY, PrefabGUIDs.CHAR_Vampire_BloodKnight_VBlood },
+    { BossConstants.SOLARUS_KEY, PrefabGUIDs.CHAR_ChurchOfLight_Paladin_VBlood },
+    { BossConstants.TALZUR_KEY, PrefabGUIDs.CHAR_Manticore_VBlood },
+    { BossConstants.ADAM_KEY, PrefabGUIDs.CHAR_Gloomrot_Monster_VBlood },
+    { BossConstants.MEGARA_KEY, PrefabGUIDs.CHAR_Blackfang_Morgana_VBlood },
+    { BossConstants.DRACULA_KEY, PrefabGUIDs.CHAR_Vampire_Dracula_VBlood }
   };
 
   public static bool RemoveVBloodUnlock(Entity userEntity, string vBloodKey)
