@@ -196,4 +196,18 @@ public static class VExtensions
       DestroyUtility.Destroy(EntityManager, entity);
     }
   }
+
+  public static bool TryGetPlayer(this Entity entity, out Entity player)
+  {
+    player = Entity.Null;
+
+    if (entity.Has<PlayerCharacter>())
+    {
+      player = entity;
+
+      return true;
+    }
+
+    return false;
+  }
 }

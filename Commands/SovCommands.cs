@@ -6,6 +6,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Stunlock.Core;
+using ProjectM;
 
 namespace SoVUtilities.Commands;
 
@@ -575,5 +576,78 @@ internal static class SovCommands
     }
 
     ctx.Reply(sb.ToString());
+  }
+
+  [Command("ability set", "Set an ability to a slot", adminOnly: true)]
+  public static void SetAbilityCommand(ChatCommandContext ctx, int placementId, int prefabGuid, string playerName = null)
+  {
+    if (!AbilityService.PlacementIdToAbilityType.TryGetValue(placementId, out var slot))
+    {
+      ctx.Reply($"Invalid slot (<color=white>0</color> for Attack, <color=white>1</color> for Q, <color=white>2</color> for E, <color=white>3</color> for Dash, <color=white>4</color> for Spell 1, <color=white>5</color> for Spell 2, <color=white>6</color> for Ultimate)");
+      return;
+    }
+    Entity playerEntity;
+    Entity userEntity;
+    if (string.IsNullOrEmpty(playerName))
+    {
+      playerEntity = ctx.Event.SenderCharacterEntity;
+    }
+    else
+    {
+      if (!TryFindPlayer(playerName, out playerEntity, out userEntity))
+      {
+        ctx.Reply($"Player '{playerName}' not found.");
+        return;
+      }
+    }
+    AbilityService.setAbility(playerEntity, slot, new PrefabGUID(prefabGuid));
+    ctx.Reply($"Set ability slot {slot} to prefab GUID {prefabGuid} for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
+  }
+
+  [Command("ability clear", "Clear an ability slot", adminOnly: true)]
+  public static void ClearAbilitySlotCommand(ChatCommandContext ctx, int placementId, string playerName = null)
+  {
+    if (!AbilityService.PlacementIdToAbilityType.TryGetValue(placementId, out var slot))
+    {
+      ctx.Reply($"Invalid slot (<color=white>0</color> for Attack, <color=white>1</color> for Q, <color=white>2</color> for E, <color=white>3</color> for Dash, <color=white>4</color> for Spell 1, <color=white>5</color> for Spell 2, <color=white>6</color> for Ultimate)");
+      return;
+    }
+    Entity playerEntity;
+    Entity userEntity;
+    if (string.IsNullOrEmpty(playerName))
+    {
+      playerEntity = ctx.Event.SenderCharacterEntity;
+    }
+    else
+    {
+      if (!TryFindPlayer(playerName, out playerEntity, out userEntity))
+      {
+        ctx.Reply($"Player '{playerName}' not found.");
+        return;
+      }
+    }
+    AbilityService.ClearAbilitySlot(playerEntity, slot);
+    ctx.Reply($"Cleared ability slot {slot} for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
+  }
+
+  [Command("ability clearall", "Clear all ability slots", adminOnly: true)]
+  public static void ClearAllAbilitySlotsCommand(ChatCommandContext ctx, string playerName = null)
+  {
+    Entity playerEntity;
+    Entity userEntity;
+    if (string.IsNullOrEmpty(playerName))
+    {
+      playerEntity = ctx.Event.SenderCharacterEntity;
+    }
+    else
+    {
+      if (!TryFindPlayer(playerName, out playerEntity, out userEntity))
+      {
+        ctx.Reply($"Player '{playerName}' not found.");
+        return;
+      }
+    }
+    AbilityService.ClearAllAbilitySlots(playerEntity);
+    ctx.Reply($"Cleared all ability slots for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
   }
 }
