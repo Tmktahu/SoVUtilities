@@ -28,6 +28,9 @@ internal static class BuffService
   public static string EncasedBuffId = "encased_buff";
   public static string ConsumedBuffId = "consumed_buff";
   public static string SeededBuffId = "seeded_buff";
+  public static string RelicBuffId = "relic_buff";
+  public static string SpiritChosenBuffId = "spirit_chosen_buff";
+  public static string WerewolfBuffId = "werewolf_buff";
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
     { HumanBuffId, new HumanCustomBuff() },
@@ -36,7 +39,9 @@ internal static class BuffService
     { BeholdenBuffId, new BeholdenCustomBuff() },
     { EncasedBuffId, new EncasedCustomBuff() },
     { ConsumedBuffId, new ConsumedCustomBuff() },
-    { SeededBuffId, new SeededCustomBuff() }
+    { SeededBuffId, new SeededCustomBuff() },
+    { RelicBuffId, new RelicCustomBuff() },
+    { SpiritChosenBuffId, new SpiritChosenCustomBuff() }
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)

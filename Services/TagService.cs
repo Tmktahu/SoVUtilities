@@ -22,6 +22,9 @@ public static class TagService
     public const string AEGIS = "aegis";
     public const string OAKSONG = "oaksong";
     public const string STYX = "styx";
+    public const string RELIC = "relic";
+    public const string SPIRIT_CHOSEN = "spiritchosen";
+    public const string WEREWOLF = "werewolf";
   }
 
   // Check if a tag is valid
@@ -42,6 +45,9 @@ public static class TagService
       Tags.AEGIS => true,
       Tags.OAKSONG => true,
       Tags.STYX => true,
+      Tags.RELIC => true,
+      Tags.SPIRIT_CHOSEN => true,
+      Tags.WEREWOLF => true,
       _ => false
     };
   }
@@ -62,6 +68,9 @@ public static class TagService
     yield return Tags.AEGIS;
     yield return Tags.OAKSONG;
     yield return Tags.STYX;
+    yield return Tags.RELIC;
+    yield return Tags.SPIRIT_CHOSEN;
+    yield return Tags.WEREWOLF;
   }
 
   // we need to map tags to buff string IDs array
@@ -73,7 +82,9 @@ public static class TagService
     { Tags.CONSUMED, new[] { BuffService.ConsumedBuffId } },
     { Tags.SEEDED, new[] { BuffService.SeededBuffId } },
     { Tags.HIDE_NAMEPLATE, new[] { BuffService.HideNameplateBuffId } },
-    { Tags.HUMAN, new[] { BuffService.HumanBuffId } }
+    { Tags.HUMAN, new[] { BuffService.HumanBuffId } },
+    { Tags.RELIC, new[] { BuffService.RelicBuffId } },
+    { Tags.SPIRIT_CHOSEN, new[] { BuffService.SpiritChosenBuffId } }
   };
 
   public static bool AddPlayerTag(Entity characterEntity, string tag)

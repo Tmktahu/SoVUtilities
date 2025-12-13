@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Stunlock.Core;
 using ProjectM;
+using SoVUtilities.Services.Buffs;
 
 namespace SoVUtilities.Commands;
 
@@ -649,5 +650,94 @@ internal static class SovCommands
     }
     AbilityService.ClearAllAbilitySlots(playerEntity);
     ctx.Reply($"Cleared all ability slots for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
+  }
+
+  // a command to set the hide admin status flag for a player
+  [Command("hideadmin", "Toggle hiding your admin status in chat", adminOnly: true)]
+  public static void ToggleHideAdminStatusCommand(ChatCommandContext ctx, string hideStatus = null)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    if (playerEntity == null)
+    {
+      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
+      return;
+    }
+
+    var playerData = PlayerDataService.GetPlayerData(playerEntity);
+
+    bool hideStatusBool;
+    if (string.Equals(hideStatus, "true", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(hideStatus, "yes", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(hideStatus, "1", StringComparison.OrdinalIgnoreCase))
+    {
+      hideStatusBool = true;
+    }
+    else if (string.Equals(hideStatus, "false", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(hideStatus, "no", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(hideStatus, "0", StringComparison.OrdinalIgnoreCase))
+    {
+      hideStatusBool = false;
+    }
+    else if (string.IsNullOrEmpty(hideStatus))
+    {
+      // toggle the current status
+      hideStatusBool = !playerData.HideAdminStatus;
+    }
+    else
+    {
+      ctx.Reply("Invalid argument. Use 'true', 'false', or leave empty to toggle.");
+      return;
+    }
+
+    playerData.HideAdminStatus = hideStatusBool;
+    PlayerDataService.SaveData();
+
+    ctx.Reply($"Your admin status will now be {(hideStatusBool ? "hidden" : "visible")} in chat.");
+  }
+
+  // command to transform into a werewolf
+  [Command("transform werewolf", "Transform into a werewolf", adminOnly: false)]
+  public static void TransformIntoWerewolfCommand(ChatCommandContext ctx)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    if (playerEntity == null)
+    {
+      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
+      return;
+    }
+
+    // check if they have the werewolf tag
+    var playerData = PlayerDataService.GetPlayerData(playerEntity);
+    if (!playerData.HasTag(TagService.Tags.WEREWOLF))
+    {
+      ctx.Reply("You are not a werewolf.");
+      return;
+    }
+
+    WerewolfBuff.ApplyCustomBuff(playerEntity);
+
+    ctx.Reply("You have transformed into a werewolf.");
+  }
+
+  // command to revert from werewolf form
+  [Command("revert werewolf", "Revert from werewolf form", adminOnly: false)]
+  public static void RevertFromWerewolfCommand(ChatCommandContext ctx)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    if (playerEntity == null)
+    {
+      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
+      return;
+    }
+
+    if (!WerewolfBuff.HasBuff(playerEntity))
+    {
+      ctx.Reply("You are not in werewolf form.");
+      return;
+    }
+
+    WerewolfBuff.RemoveBuff(playerEntity);
+
+    ctx.Reply("You have reverted from werewolf form.");
   }
 }

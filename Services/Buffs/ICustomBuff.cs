@@ -65,3 +65,27 @@ public class SeededCustomBuff : ICustomBuff
   public bool HasBuff(Entity entity) => SeededBuff.HasBuff(entity);
   public string BuffId => BuffService.SeededBuffId;
 }
+
+public class RelicCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity) => RelicBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => RelicBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => RelicBuff.HasBuff(entity);
+  public string BuffId => BuffService.RelicBuffId;
+}
+
+public class SpiritChosenCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity) => SpiritChosenBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => SpiritChosenBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => SpiritChosenBuff.HasBuff(entity);
+  public string BuffId => BuffService.SpiritChosenBuffId;
+}
+
+public class WerewolfCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity) => WerewolfBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => WerewolfBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => WerewolfBuff.HasBuff(entity);
+  public string BuffId => BuffService.WerewolfBuffId;
+}
