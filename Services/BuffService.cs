@@ -31,6 +31,7 @@ internal static class BuffService
   public static string RelicBuffId = "relic_buff";
   public static string SpiritChosenBuffId = "spirit_chosen_buff";
   public static string WerewolfBuffId = "werewolf_buff";
+  public static string WerewolfStatsBuffId = "werewolf_stats_buff";
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
     { HumanBuffId, new HumanCustomBuff() },
@@ -41,7 +42,8 @@ internal static class BuffService
     { ConsumedBuffId, new ConsumedCustomBuff() },
     { SeededBuffId, new SeededCustomBuff() },
     { RelicBuffId, new RelicCustomBuff() },
-    { SpiritChosenBuffId, new SpiritChosenCustomBuff() }
+    { SpiritChosenBuffId, new SpiritChosenCustomBuff() },
+    { WerewolfStatsBuffId, new WerewolfStatsCustomBuff() },
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)
@@ -212,8 +214,11 @@ internal static class BuffService
   {
     if (TryGetCustomBuff(customBuffId, out var customBuff))
     {
-      customBuff.RemoveBuff(characterEntity);
-      return true;
+      if (customBuff.HasBuff(characterEntity))
+      {
+        customBuff.RemoveBuff(characterEntity);
+        return true;
+      }
     }
 
     return false;

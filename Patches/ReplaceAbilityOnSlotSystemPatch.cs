@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Stunlock.Core;
 using SoVUtilities.Resources;
+using SoVUtilities.Models;
 
 namespace SoVUtilities.Patches;
 
@@ -30,8 +31,6 @@ internal static class ReplaceAbilityOnSlotSystemPatch
                     PrefabGUID prefabGUID = EntityManager.GetComponentData<PrefabGUID>(buffEntity);
                     if (prefabGUID.IsEmpty()) continue;
 
-                    // if (prefabGUID == PrefabGUIDs.EquipBuff_Weapon_Claws_Ability03_Unique01) continue;
-
                     string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(prefabGUID);
                     if (string.IsNullOrEmpty(prefabName)) continue; // Skip if prefabName is invalid
 
@@ -40,7 +39,21 @@ internal static class ReplaceAbilityOnSlotSystemPatch
                     if (!buffEntity.TryGetComponent(out EntityOwner entityOwner) || !entityOwner.Owner.Exists()) continue;
                     else if (entityOwner.Owner.TryGetPlayer(out Entity character))
                     {
-                        AbilityService.ApplyAbilities(character, buffEntity);
+                        PlayerData playerData = PlayerDataService.GetPlayerData(character);
+                        int[] abilitySlotPrefabGUIDs = null;
+
+                        // for each category, check if the prefabName contains it
+                        // and if so, get the corresponding abilitySlotPrefabGUIDs
+                        AbilityService.weaponCategories.ForEach(category =>
+                        {
+                            if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
+                            {
+                                AbilityService.WeaponCategoryToDefaultEquipBuff.TryGetValue(category, out var defaultEquipBuff);
+                                playerData.AbilitySlotDefinitions.TryGetValue(defaultEquipBuff._Value, out abilitySlotPrefabGUIDs);
+                            }
+                        });
+
+                        AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs);
                     }
                 }
                 catch (Exception ex)

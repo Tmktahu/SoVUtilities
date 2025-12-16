@@ -84,7 +84,8 @@ public static class TagService
     { Tags.HIDE_NAMEPLATE, new[] { BuffService.HideNameplateBuffId } },
     { Tags.HUMAN, new[] { BuffService.HumanBuffId } },
     { Tags.RELIC, new[] { BuffService.RelicBuffId } },
-    { Tags.SPIRIT_CHOSEN, new[] { BuffService.SpiritChosenBuffId } }
+    { Tags.SPIRIT_CHOSEN, new[] { BuffService.SpiritChosenBuffId } },
+    { Tags.WEREWOLF, new[] { BuffService.WerewolfStatsBuffId } },
   };
 
   public static bool AddPlayerTag(Entity characterEntity, string tag)

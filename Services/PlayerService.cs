@@ -6,21 +6,33 @@ using ProjectM;
 using ProjectM.Network;
 using Unity.Collections;
 using Unity.Entities;
+using Stunlock.Core;
+using SoVUtilities.Resources;
 
 namespace SoVUtilities.Services;
 
+public struct PlayerCacheData(FixedString64Bytes characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
+{
+  public FixedString64Bytes CharacterName { get; set; } = characterName;
+  public ulong SteamID { get; set; } = steamID;
+  public bool IsOnline { get; set; } = isOnline;
+  public Entity UserEntity { get; set; } = userEntity;
+  public Entity CharEntity { get; set; } = charEntity;
+
+}
+
 internal class PlayerService
 {
-  readonly Dictionary<FixedString64Bytes, PlayerData> namePlayerCache = [];
-  readonly Dictionary<ulong, PlayerData> steamPlayerCache = [];
+  readonly Dictionary<FixedString64Bytes, PlayerCacheData> namePlayerCache = [];
+  readonly Dictionary<ulong, PlayerCacheData> steamPlayerCache = [];
   readonly Dictionary<NetworkId, PlayerData> idPlayerCache = [];
 
-  internal bool TryFindSteam(ulong steamId, out PlayerData playerData)
+  internal bool TryFindSteam(ulong steamId, out PlayerCacheData playerData)
   {
     return steamPlayerCache.TryGetValue(steamId, out playerData);
   }
 
-  internal bool TryFindName(FixedString64Bytes name, out PlayerData playerData)
+  internal bool TryFindName(FixedString64Bytes name, out PlayerCacheData playerData)
   {
     return namePlayerCache.TryGetValue(name, out playerData);
   }
@@ -30,23 +42,23 @@ internal class PlayerService
     namePlayerCache.Clear();
     steamPlayerCache.Clear();
 
-    // var userEntities = Helper.GetEntitiesByComponentType<User>(includeDisabled: true);
-    // foreach (var entity in userEntities)
-    // {
-    // 	var userData = Core.EntityManager.GetComponentData<User>(entity);
-    // 	var playerData = new PlayerData(userData.CharacterName, userData.PlatformId, userData.IsConnected, entity, userData.LocalCharacter._Entity);
+    var userEntities = EntityService.GetEntitiesByComponentType<User>(includeDisabled: true);
+    foreach (var entity in userEntities)
+    {
+      var userData = Core.EntityManager.GetComponentData<User>(entity);
+      var playerData = new PlayerCacheData(userData.CharacterName, userData.PlatformId, userData.IsConnected, entity, userData.LocalCharacter._Entity);
 
-    // 	namePlayerCache.TryAdd(userData.CharacterName.ToString().ToLower(), playerData);
-    // 	steamPlayerCache.TryAdd(userData.PlatformId, playerData);
+      namePlayerCache.TryAdd(userData.CharacterName.ToString().ToLower(), playerData);
+      steamPlayerCache.TryAdd(userData.PlatformId, playerData);
 
-    // 	var charEntity = userData.LocalCharacter.GetEntityOnServer();
-    // 	if (!charEntity.Equals(Entity.Null) &&
-    // 		Core.ConfigSettings.EveryoneDaywalker ^ Core.BoostedPlayerService.IsDaywalker(charEntity))
-    // 	{
-    // 		Core.BoostedPlayerService.ToggleDaywalker(charEntity);
-    // 		Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-    // 	}
-    // }
+      // var charEntity = userData.LocalCharacter.GetEntityOnServer();
+      // if (!charEntity.Equals(Entity.Null) &&
+      // 	Core.ConfigSettings.EveryoneDaywalker ^ Core.BoostedPlayerService.IsDaywalker(charEntity))
+      // {
+      // 	Core.BoostedPlayerService.ToggleDaywalker(charEntity);
+      // 	Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+      // }
+    }
 
 
     // var onlinePlayers = namePlayerCache.Values.Where(p => p.IsOnline).Select(p => $"\t{p.CharacterName}");
@@ -124,14 +136,42 @@ internal class PlayerService
     _userEntities.Dispose();
   }
 
+  public IEnumerable<Entity> GetCachedUsersOnline()
+  {
+    foreach (var pd in namePlayerCache.Values.ToArray())
+    {
+      var entity = pd.UserEntity;
+      if (Core.EntityManager.Exists(entity) && entity.Read<User>().IsConnected)
+        yield return entity;
+    }
+  }
 
-  // public IEnumerable<Entity> GetCachedUsersOnline()
-  // {
-  // 	foreach (var pd in namePlayerCache.Values.ToArray())
-  // 	{
-  // 		var entity = pd.UserEntity;
-  // 		if (Core.EntityManager.Exists(entity) && entity.Read<User>().IsConnected)
-  // 			yield return entity;
-  // 	}
-  // }
+  public static string GetEquippedWeaponCategory(Entity playerEntity)
+  {
+    // we get all buffs on the character and loop through them
+    var buffEntities = EntityService.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
+
+    foreach (var buffEntity in buffEntities)
+    {
+      if (buffEntity.Read<EntityOwner>().Owner == playerEntity)
+      {
+        // we need to get the name of the buff, so we need its prefab GUID
+        PrefabGUID buff = Core.EntityManager.GetComponentData<PrefabGUID>(buffEntity);
+        string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(buff);
+
+        string equippedCategory = null;
+        AbilityService.weaponCategories.ForEach(category =>
+        {
+          if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
+          {
+            equippedCategory = category;
+          }
+        });
+
+        return equippedCategory;
+      }
+    }
+
+    return "Unknown";
+  }
 }

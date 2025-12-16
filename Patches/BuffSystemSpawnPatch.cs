@@ -4,6 +4,7 @@ using HarmonyLib;
 using ProjectM;
 using Stunlock.Core;
 using Unity.Entities;
+using SoVUtilities.Services.Buffs;
 
 namespace SoVUtilities.Patches;
 
@@ -18,6 +19,7 @@ internal static class BuffSystemSpawnPatch
     static readonly PrefabGUID WoodenCoffinSpawnBuff = PrefabGUIDs.AB_Interact_WoodenCoffinSpawn_Travel;
     static readonly PrefabGUID StoneCoffinSpawnBuff = PrefabGUIDs.AB_Interact_StoneCoffinSpawn_Travel;
     static readonly PrefabGUID TombCoffinSpawnBuff = PrefabGUIDs.AB_Interact_TombCoffinSpawn_Travel;
+
 
     static readonly EntityQuery _query = QueryService.BuffSpawnServerQuery;
 
@@ -45,6 +47,16 @@ internal static class BuffSystemSpawnPatch
 
                 if (isPlayerTarget)
                 {
+                    if (buffPrefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_NormalForm_Buff))
+                    {
+                        var playerData = PlayerDataService.GetPlayerData(buffTarget);
+                        if (playerData.HasTag(TagService.Tags.WEREWOLF))
+                        {
+                            WerewolfBuff.RemoveBuff(buffTarget);
+                            WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
+                        }
+                    }
+
                     if (buffPrefabGUID.Equals(WaygateSpawnBuff) || buffPrefabGUID.Equals(WoodenCoffinSpawnBuff) || buffPrefabGUID.Equals(StoneCoffinSpawnBuff) || buffPrefabGUID.Equals(TombCoffinSpawnBuff))
                     {
                         // we want to refresh the buffs for the player character

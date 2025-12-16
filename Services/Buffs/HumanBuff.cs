@@ -61,7 +61,7 @@ internal static class HumanBuff
         IncreaseByStacks = false,
         ValueByStacks = 0,
         Priority = 0,
-        Id = ModificationIDs.Create().NewModificationId()
+        Id = Core.ModificationIdGenerator.NewModificationId()
       };
       buffer.Add(newSilverResStatBuff);
 

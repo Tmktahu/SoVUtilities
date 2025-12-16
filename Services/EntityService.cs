@@ -3,6 +3,7 @@ using ProjectM.Network;
 using Unity.Collections;
 using Unity.Transforms;
 using ProjectM;
+using Il2CppInterop.Runtime;
 
 namespace SoVUtilities.Services;
 
@@ -102,5 +103,44 @@ public static class EntityService
     }
 
     return nearbyEntities;
+  }
+
+  public static NativeArray<Entity> GetEntitiesByComponentType<T1>(bool includeAll = false, bool includeDisabled = false, bool includeSpawn = false, bool includePrefab = false, bool includeDestroyed = false)
+  {
+    EntityQueryOptions options = EntityQueryOptions.Default;
+    if (includeAll) options |= EntityQueryOptions.IncludeAll;
+    if (includeDisabled) options |= EntityQueryOptions.IncludeDisabled;
+    if (includeSpawn) options |= EntityQueryOptions.IncludeSpawnTag;
+    if (includePrefab) options |= EntityQueryOptions.IncludePrefab;
+    if (includeDestroyed) options |= EntityQueryOptions.IncludeDestroyTag;
+
+    var entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp)
+      .AddAll(new(Il2CppType.Of<T1>(), ComponentType.AccessMode.ReadWrite))
+      .WithOptions(options);
+
+    var query = Core.EntityManager.CreateEntityQuery(ref entityQueryBuilder);
+
+    var entities = query.ToEntityArray(Allocator.Temp);
+    return entities;
+  }
+
+  public static NativeArray<Entity> GetEntitiesByComponentTypes<T1, T2>(bool includeAll = false, bool includeDisabled = false, bool includeSpawn = false, bool includePrefab = false, bool includeDestroyed = false)
+  {
+    EntityQueryOptions options = EntityQueryOptions.Default;
+    if (includeAll) options |= EntityQueryOptions.IncludeAll;
+    if (includeDisabled) options |= EntityQueryOptions.IncludeDisabled;
+    if (includeSpawn) options |= EntityQueryOptions.IncludeSpawnTag;
+    if (includePrefab) options |= EntityQueryOptions.IncludePrefab;
+    if (includeDestroyed) options |= EntityQueryOptions.IncludeDestroyTag;
+
+    var entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp)
+      .AddAll(new(Il2CppType.Of<T1>(), ComponentType.AccessMode.ReadWrite))
+      .AddAll(new(Il2CppType.Of<T2>(), ComponentType.AccessMode.ReadWrite))
+      .WithOptions(options);
+
+    var query = Core.EntityManager.CreateEntityQuery(ref entityQueryBuilder);
+
+    var entities = query.ToEntityArray(Allocator.Temp);
+    return entities;
   }
 }

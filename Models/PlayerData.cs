@@ -9,6 +9,7 @@ public class PlayerData
   public List<string> Tags { get; set; } = new List<string>();
   public DateTime? LastBloodPotionTime { get; set; }
   public int[] AbilitySlotPrefabGUIDs { get; set; } = new int[8];
+  public Dictionary<int, int[]> AbilitySlotDefinitions { get; set; } = new Dictionary<int, int[]>();
   public bool HasTag(string tag) => Tags.Contains(tag);
   public bool AddTag(string tag)
   {

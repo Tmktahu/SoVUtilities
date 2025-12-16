@@ -20,6 +20,8 @@ internal static class Core
 
   public static bool _initialized = false;
   public static World World { get; } = GetServerWorld() ?? throw new Exception("There is no Server world!");
+  public static ModificationIDs ModificationIdGenerator = Core.ModificationIdGenerator;
+  public static PlayerService PlayerService { get; private set; }
   public static EntityManager EntityManager => World.EntityManager;
   private static SystemService _systemService;
   public static SystemService SystemService => _systemService ??= new(World);
@@ -34,6 +36,8 @@ internal static class Core
   {
     // Initialize player data service
     PlayerDataService.Initialize();
+
+    PlayerService = new PlayerService();
 
     // Initialize mod data service
     ModDataService.Initialize();

@@ -89,3 +89,11 @@ public class WerewolfCustomBuff : ICustomBuff
   public bool HasBuff(Entity entity) => WerewolfBuff.HasBuff(entity);
   public string BuffId => BuffService.WerewolfBuffId;
 }
+
+public class WerewolfStatsCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity) => WerewolfStatsBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => WerewolfStatsBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => WerewolfStatsBuff.HasBuff(entity);
+  public string BuffId => BuffService.WerewolfStatsBuffId;
+}
