@@ -11,6 +11,10 @@ using ProjectM;
 using SoVUtilities.Resources;
 using SoVUtilities.Services;
 
+// using Il2CppSystem;
+
+using ProjectM.Gameplay.Scripting;
+using Stunlock.Core;
 
 namespace SoVUtilities;
 
@@ -78,9 +82,56 @@ internal static class Core
         }
       }
     }
+
+    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.SpellPassive_Storm_T03_HungerForPower, out Entity hungerForPowerBuffEntity))
+    {
+      Core.Log.LogInfo("Modifying Hunger For Power Buff.");
+      // it has a ModifyUnitStatBuff_DOTS buffer
+      if (EntityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(hungerForPowerBuffEntity, out var modifyStatBuffer))
+      {
+        for (int i = 0; i < modifyStatBuffer.Length; i++)
+        {
+          Core.Log.LogInfo($"Modifying entry {i} in ModifyUnitStatBuff_DOTS buffer.");
+          UnitStatType statType = modifyStatBuffer[i].StatType;
+          ModificationType modificationType = modifyStatBuffer[i].ModificationType;
+          float value = modifyStatBuffer[i].Value;
+          float modifier = modifyStatBuffer[i].Modifier;
+          Core.Log.LogInfo($"Before: StatType={statType}, ModificationType={modificationType}, Value={value}, Modifier={modifier}");
+        }
+      }
+
+      // it has a ProjectM.Gameplay.Scripting.Script_ApplyBuffOnAbilityUseData component
+      // if (EntityManager.TryGetComponentData<Script_ApplyBuffOnAbilityUseData>(hungerForPowerBuffEntity, out var applyBuffData))
+      // {
+      //   Core.Log.LogInfo("Found Script_ApplyBuffOnAbilityUseData component.");
+      //   PrefabGUID buff = applyBuffData.Buff;
+      //   PrefabGUID ignoreIfBuffIsActive = applyBuffData.IgnoreIfBuffIsActive;
+      //   Core.Log.LogInfo($"Before Modification: Buff={buff}, IgnoreIfBuffIsActive={ignoreIfBuffIsActive}");
+      // }
+
+    }
+
+    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.Buff_Hunger_For_Power_Effect, out Entity hungerForPowerEffectBuffEntity))
+    {
+      // it has a ModifyMovementSpeedBuff component we want to delete
+      if (EntityManager.HasComponent<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity))
+      {
+        Core.Log.LogInfo("Removing ModifyMovementSpeedBuff component from Hunger For Power Effect Buff.");
+        EntityManager.RemoveComponent<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity);
+      }
+
+      // it has an EmpowerBuff component we want to edit
+      if (EntityManager.TryGetComponentData<EmpowerBuff>(hungerForPowerEffectBuffEntity, out var empowerBuff))
+      {
+        float empowerModifier = empowerBuff.EmpowerModifier;
+        Core.Log.LogInfo($"Before Modification: EmpowerModifier={empowerModifier}");
+        empowerBuff.EmpowerModifier = 0.05f; // original is 0.2f for 20% global damage increase
+        EntityManager.SetComponentData(hungerForPowerEffectBuffEntity, empowerBuff);
+      }
+    }
+
   }
 }
-
 
 public readonly struct NativeAccessor<T> : IDisposable where T : unmanaged
 {
