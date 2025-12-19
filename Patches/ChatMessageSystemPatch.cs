@@ -122,13 +122,13 @@ public static class ChatMessageSystemPatch
 
     user.IsAdmin = false; // temporarily set to false to avoid admin tag in local chat
     entityManager.SetComponentData(senderUserEntity, user);
-    AdminAuthUtility.SendUserToConnectedUsers(entityManager, ref user, senderUserEntity);
+    AdminAuthUtility.SendUserToConnectedUsers(entityManager, ref user, senderUserEntity, false);
 
     yield return new WaitForSeconds(0.3f);
 
     user.IsAdmin = true; // set it back to true
     entityManager.SetComponentData(senderUserEntity, user);
-    AdminAuthUtility.SendUserToConnectedUsers(entityManager, ref user, senderUserEntity);
+    AdminAuthUtility.SendUserToConnectedUsers(entityManager, ref user, senderUserEntity, false);
 
     yield return null;
   }
