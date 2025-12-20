@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using Il2CppInterop.Runtime;
 using SoVUtilities.Models;
@@ -18,7 +18,7 @@ public struct PlayerCacheData(FixedString64Bytes characterName = default, ulong 
   public bool IsOnline { get; set; } = isOnline;
   public Entity UserEntity { get; set; } = userEntity;
   public Entity CharEntity { get; set; } = charEntity;
-
+  public int UnarmedGearScore { get; set; } = -1;
 }
 
 internal class PlayerService
@@ -26,6 +26,7 @@ internal class PlayerService
   readonly Dictionary<FixedString64Bytes, PlayerCacheData> namePlayerCache = [];
   readonly Dictionary<ulong, PlayerCacheData> steamPlayerCache = [];
   readonly Dictionary<NetworkId, PlayerData> idPlayerCache = [];
+  readonly EntityManager EntityManager = Core.EntityManager;
 
   internal bool TryFindSteam(ulong steamId, out PlayerCacheData playerData)
   {
@@ -64,6 +65,98 @@ internal class PlayerService
     // var onlinePlayers = namePlayerCache.Values.Where(p => p.IsOnline).Select(p => $"\t{p.CharacterName}");
     // Core.Log.LogWarning($"Player Cache Created with {namePlayerCache.Count} entries total, listing {onlinePlayers.Count()} online:");
     // Core.Log.LogWarning(string.Join("\n", onlinePlayers));
+    Core.StartCoroutine(PlayerLoop());
+  }
+
+  internal void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
+  {
+    var userData = Core.EntityManager.GetComponentData<User>(userEntity);
+    namePlayerCache.Remove(oldName.ToLower());
+
+    if (forceOffline) userData.IsConnected = false;
+    var playerData = new PlayerCacheData(newName, userData.PlatformId, userData.IsConnected, userEntity, userData.LocalCharacter._Entity);
+
+    namePlayerCache[newName.ToLower()] = playerData;
+    steamPlayerCache[userData.PlatformId] = playerData;
+    // idPlayerCache[userEntity.Read<NetworkId>()] = playerData;
+  }
+
+  IEnumerator PlayerLoop()
+  {
+    while (true)
+    {
+      // handling for our global stats buff
+      foreach (var userEntity in GetUsersOnline())
+      {
+        var userData = Core.EntityManager.GetComponentData<User>(userEntity);
+        var charEntity = userData.LocalCharacter._Entity;
+
+        // if (!charEntity.Equals(Entity.Null))
+        // {
+        //   if (!BuffService.HasBuff(charEntity, BuffService.globalStatsBuff))
+        //   {
+        //     BuffService.ApplyPermanentBuff(charEntity, BuffService.globalStatsBuff);
+        //   }
+        // }
+
+        HandlePlayerGearscore(userEntity);
+
+        // for regional buffs and whatnot
+        if (Core.RegionService != null)
+        {
+          Core.RegionService.CheckPlayerRegions(userEntity);
+        }
+      }
+
+      if (Core.RegionService != null)
+      {
+        Core.RegionService.ResetForceUpdateFlag();
+      }
+
+      yield return null;
+    }
+  }
+
+  public void HandlePlayerGearscore(Entity userEntity)
+  {
+    // so this will be called whenever they swap weapons or change gear?
+    // essentially when they flip to unarmed or fishing pole, we want their gearscore to stick
+    // that means we'll need to buff them accordingly
+    var userData = Core.EntityManager.GetComponentData<User>(userEntity);
+    var charEntity = userData.LocalCharacter._Entity;
+
+    // we use our global buff for this
+    if (!charEntity.Equals(Entity.Null))
+    {
+      if (!EntityManager.HasComponent<Equipment>(charEntity))
+        return;
+
+      // Core.Log.LogInfo($"PlayerService: Handling gearscore for character entity {charEntity.Index}.");
+      var equipment = charEntity.Read<Equipment>();
+      string characterName = userData.CharacterName.ToString().ToLower();
+      if (namePlayerCache.TryGetValue(characterName, out var playerCacheData))
+      {
+        if (equipment.WeaponLevel == 0)
+        {
+          // unarmed or fishing pole
+          // in this case we want to update their buff to match their unarmed gearscore
+          int unarmedGearScore = playerCacheData.UnarmedGearScore;
+          if (unarmedGearScore > 0)
+          {
+            // apply buff with unarmed gearscore
+            // BuffService.UpdateGlobalStatBuff(charEntity, unarmedGearScore);
+            equipment.WeaponLevel._Value = unarmedGearScore;
+            EntityManager.SetComponentData(charEntity, equipment);
+          }
+        }
+        else
+        {
+          // armed, we want to keep track of their weapon gearscore for later
+          playerCacheData.UnarmedGearScore = (int)Math.Round(equipment.WeaponLevel);
+          namePlayerCache[characterName] = playerCacheData;
+        }
+      }
+    }
   }
 
   // internal void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
@@ -138,6 +231,7 @@ internal class PlayerService
 
   public IEnumerable<Entity> GetCachedUsersOnline()
   {
+    // Core.Log.LogInfo($"PlayerService: Getting cached online users. Cache size: {namePlayerCache.Count}");
     foreach (var pd in namePlayerCache.Values.ToArray())
     {
       var entity = pd.UserEntity;

@@ -26,6 +26,7 @@ internal static class Core
   public static World World { get; } = GetServerWorld() ?? throw new Exception("There is no Server world!");
   public static ModificationIDs ModificationIdGenerator = Core.ModificationIdGenerator;
   public static PlayerService PlayerService { get; private set; }
+  public static RegionService RegionService { get; private set; }
   public static EntityManager EntityManager => World.EntityManager;
   private static SystemService _systemService;
   public static SystemService SystemService => _systemService ??= new(World);
@@ -41,6 +42,7 @@ internal static class Core
     // Initialize player data service
     PlayerDataService.Initialize();
 
+    RegionService = new RegionService();
     PlayerService = new PlayerService();
 
     // Initialize mod data service
@@ -92,11 +94,35 @@ internal static class Core
         for (int i = 0; i < modifyStatBuffer.Length; i++)
         {
           Core.Log.LogInfo($"Modifying entry {i} in ModifyUnitStatBuff_DOTS buffer.");
+          // AttributeCapType attributeCapType = modifyStatBuffer[i].AttributeCapType;
           UnitStatType statType = modifyStatBuffer[i].StatType;
-          ModificationType modificationType = modifyStatBuffer[i].ModificationType;
-          float value = modifyStatBuffer[i].Value;
-          float modifier = modifyStatBuffer[i].Modifier;
-          Core.Log.LogInfo($"Before: StatType={statType}, ModificationType={modificationType}, Value={value}, Modifier={modifier}");
+          // ModificationType modificationType = modifyStatBuffer[i].ModificationType;
+          // float value = modifyStatBuffer[i].Value;
+          // float softCapValue = modifyStatBuffer[i].SoftCapValue;
+          // float modifier = modifyStatBuffer[i].Modifier;
+          // bool increaseByStacks = modifyStatBuffer[i].IncreaseByStacks;
+          // float valueByStacks = modifyStatBuffer[i].ValueByStacks;
+          // int priority = modifyStatBuffer[i].Priority;
+          // Core.Log.LogInfo($"Before: AttributeCapType={attributeCapType}, StatType={statType}, ModificationType={modificationType}, Value={value}, SoftCapValue={softCapValue}, Modifier={modifier}, IncreaseByStacks={increaseByStacks}, ValueByStacks={valueByStacks}, Priority={priority}");
+
+          // if (statType == UnitStatType.SpellLifeLeech)
+          // {
+          //   modifyStatBuffer[i] = new ModifyUnitStatBuff_DOTS
+          //   {
+          //     AttributeCapType = modifyStatBuffer[i].AttributeCapType,
+          //     StatType = modifyStatBuffer[i].StatType,
+          //     ModificationType = modifyStatBuffer[i].ModificationType,
+          //     Value = 2f, // change to flat 2.0 increase
+          //     SoftCapValue = modifyStatBuffer[i].SoftCapValue,
+          //     Modifier = modifyStatBuffer[i].Modifier,
+          //     IncreaseByStacks = modifyStatBuffer[i].IncreaseByStacks,
+          //     ValueByStacks = modifyStatBuffer[i].ValueByStacks,
+          //     Priority = modifyStatBuffer[i].Priority,
+          //     Id = modifyStatBuffer[i].Id
+          //   };
+          // }
+
+          modifyStatBuffer.Clear();
         }
       }
 
@@ -114,10 +140,18 @@ internal static class Core
     if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.Buff_Hunger_For_Power_Effect, out Entity hungerForPowerEffectBuffEntity))
     {
       // it has a ModifyMovementSpeedBuff component we want to delete
-      if (EntityManager.HasComponent<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity))
+      if (EntityManager.TryGetComponentData<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity, out var modifyMovementSpeedBuff))
       {
         Core.Log.LogInfo("Removing ModifyMovementSpeedBuff component from Hunger For Power Effect Buff.");
-        EntityManager.RemoveComponent<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity);
+        float moveSpeed = modifyMovementSpeedBuff.MoveSpeed; // 1.1 originally for 10% increase
+        // CurveReference curve = modifyMovementSpeedBuff.Curve;
+        // bool multiplyAdd = modifyMovementSpeedBuff.MultiplyAdd; // false originally
+        // Core.Log.LogInfo($"Before Removal: MoveSpeed={moveSpeed}, Curve={curve}, MultiplyAdd={multiplyAdd}");
+
+        modifyMovementSpeedBuff.MoveSpeed = 1.05f; // change to 5% increase instead of removing
+        EntityManager.SetComponentData(hungerForPowerEffectBuffEntity, modifyMovementSpeedBuff);
+
+        // EntityManager.RemoveComponent<ModifyMovementSpeedBuff>(hungerForPowerEffectBuffEntity);
       }
 
       // it has an EmpowerBuff component we want to edit
@@ -125,7 +159,7 @@ internal static class Core
       {
         float empowerModifier = empowerBuff.EmpowerModifier;
         Core.Log.LogInfo($"Before Modification: EmpowerModifier={empowerModifier}");
-        empowerBuff.EmpowerModifier = 0.05f; // original is 0.2f for 20% global damage increase
+        empowerBuff.EmpowerModifier = 0.1f; // original is 0.2f for 20% global damage increase
         EntityManager.SetComponentData(hungerForPowerEffectBuffEntity, empowerBuff);
       }
     }

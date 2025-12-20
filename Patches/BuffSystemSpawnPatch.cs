@@ -45,8 +45,11 @@ internal static class BuffSystemSpawnPatch
 
                 bool isPlayerTarget = playerCharacterLookup.HasComponent(buffTarget);
 
+                Core.Log.LogInfo($"[BuffSystem_Spawn_Server] - Buff Applied: {buffPrefabGUID} to {buffTarget}");
+
                 if (isPlayerTarget)
                 {
+                    Core.Log.LogInfo($"[BuffSystem_Spawn_Server] - Player Buff Applied: {buffPrefabGUID} to {buffTarget}");
                     if (buffPrefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_NormalForm_Buff))
                     {
                         var playerData = PlayerDataService.GetPlayerData(buffTarget);

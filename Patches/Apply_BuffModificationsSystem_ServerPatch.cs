@@ -1,0 +1,67 @@
+using SoVUtilities.Resources;
+using SoVUtilities.Services;
+using HarmonyLib;
+using ProjectM;
+using Stunlock.Core;
+using Unity.Entities;
+using SoVUtilities.Services.Buffs;
+
+namespace SoVUtilities.Patches;
+
+[HarmonyPatch]
+internal static class Apply_BuffModificationsSystem_ServerPatch
+{
+  static EntityManager EntityManager => Core.EntityManager;
+  static readonly PrefabGUID InCombatBuff = PrefabGUIDs.Buff_InCombat;
+  static readonly PrefabGUID CombatStanceBuff = PrefabGUIDs.Buff_CombatStance;
+  static readonly PrefabGUID ShapeshiftNormalFormBuff = PrefabGUIDs.AB_Shapeshift_NormalForm_Buff;
+  static readonly PrefabGUID WaygateSpawnBuff = PrefabGUIDs.AB_Interact_WaypointSpawn_Travel;
+  static readonly PrefabGUID WoodenCoffinSpawnBuff = PrefabGUIDs.AB_Interact_WoodenCoffinSpawn_Travel;
+  static readonly PrefabGUID StoneCoffinSpawnBuff = PrefabGUIDs.AB_Interact_StoneCoffinSpawn_Travel;
+  static readonly PrefabGUID TombCoffinSpawnBuff = PrefabGUIDs.AB_Interact_TombCoffinSpawn_Travel;
+
+
+  static readonly EntityQuery _query = QueryService.BuffSpawnServerQuery;
+
+  [HarmonyPatch(typeof(Apply_BuffModificationsSystem_Server), nameof(Apply_BuffModificationsSystem_Server.OnUpdate))]
+  [HarmonyPrefix]
+  static void OnUpdatePrefix(Apply_BuffModificationsSystem_Server __instance)
+  {
+    if (!Core._initialized) return;
+
+    using NativeAccessor<Entity> entities = _query.ToEntityArrayAccessor();
+    using NativeAccessor<PrefabGUID> prefabGuids = _query.ToComponentDataArrayAccessor<PrefabGUID>();
+    using NativeAccessor<Buff> buffs = _query.ToComponentDataArrayAccessor<Buff>();
+
+    ComponentLookup<PlayerCharacter> playerCharacterLookup = __instance.GetComponentLookup<PlayerCharacter>(true);
+
+    try
+    {
+      for (int i = 0; i < entities.Length; i++)
+      {
+        // Entity buffEntity = entities[i];
+        Entity buffTarget = buffs[i].Target;
+        PrefabGUID buffPrefabGUID = prefabGuids[i];
+
+        bool isPlayerTarget = playerCharacterLookup.HasComponent(buffTarget);
+
+        Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Buff Applied: {buffPrefabGUID} to {buffTarget}");
+
+        if (isPlayerTarget)
+        {
+          Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Player Buff Applied: {buffPrefabGUID} to {buffTarget}");
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      Core.Log.LogWarning($"[BuffSystem_Spawn_Server] - Exception: {e}");
+    }
+    finally
+    {
+      entities.Dispose();
+      prefabGuids.Dispose();
+      buffs.Dispose();
+    }
+  }
+}

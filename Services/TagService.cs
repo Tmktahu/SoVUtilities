@@ -10,6 +10,21 @@ public static class TagService
   public static class Tags
   {
     public const string ADMIN = "admin";
+
+    public const string CURSED_FOREST = "cursed_forest";
+    public const string DUNLEY_FARMLANDS = "dunley_farmlands";
+    public const string FARBANE_WOODS = "farbane_woods";
+    public const string GLOOMROT_NORTH = "gloomrot_north";
+    public const string GLOOMROT_SOUTH = "gloomrot_south";
+    public const string HALLOWED_MOUNTAINS = "hallowed_mountains";
+    public const string NONE_REGION = "none_region";
+    public const string OTHER_REGION = "other_region";
+    public const string RUINS_OF_MORTIUM = "ruins_of_mortium";
+    public const string SILVERLIGHT_HILLS = "silverlight_hills";
+    public const string START_CAVE = "start_cave";
+    public const string OAKVEIL_FOREST = "oakveil_forest";
+
+
     public const string AFFLICTED = "afflicted";
     public const string BEHOLDEN = "beholden";
     public const string ENCASED = "encased";
@@ -30,6 +45,8 @@ public static class TagService
   // Check if a tag is valid
   public static bool IsValidTag(string tag)
   {
+    if (IsValidRegionTag(tag))
+      return true;
     return tag switch
     {
       Tags.ADMIN => true,
@@ -48,6 +65,27 @@ public static class TagService
       Tags.RELIC => true,
       Tags.SPIRIT_CHOSEN => true,
       Tags.WEREWOLF => true,
+      _ => false
+    };
+  }
+
+  // Check if a tag is a valid region tag
+  public static bool IsValidRegionTag(string tag)
+  {
+    return tag switch
+    {
+      Tags.CURSED_FOREST => true,
+      Tags.DUNLEY_FARMLANDS => true,
+      Tags.FARBANE_WOODS => true,
+      Tags.GLOOMROT_NORTH => true,
+      Tags.GLOOMROT_SOUTH => true,
+      Tags.HALLOWED_MOUNTAINS => true,
+      Tags.NONE_REGION => true,
+      Tags.OTHER_REGION => true,
+      Tags.RUINS_OF_MORTIUM => true,
+      Tags.SILVERLIGHT_HILLS => true,
+      Tags.START_CAVE => true,
+      Tags.OAKVEIL_FOREST => true,
       _ => false
     };
   }

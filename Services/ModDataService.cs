@@ -2,6 +2,7 @@ using System.Text.Json;
 using Stunlock.Core;
 using SoVUtilities.Resources;
 using static SoVUtilities.Services.TagService;
+using SoVUtilities.Services;
 
 namespace SoVUtilities.Services;
 
@@ -16,6 +17,7 @@ public static class ModDataService
 
   // Data keys for backwards compatibility
   public const string SOFTLOCK_MAPPING_KEY = "softlock_mapping";
+  public const string REGION_BUFF_MAPPING_KEY = "region_buff_mapping";
 
   public static void Initialize()
   {
@@ -52,6 +54,14 @@ public static class ModDataService
       ModData[SOFTLOCK_MAPPING_KEY] = defaultSoftlockMapping;
       needsSave = true;
       Core.Log.LogInfo("Initialized default softlock mapping for backwards compatibility");
+    }
+
+    // Initialize region buff mapping if it doesn't exist
+    if (!ModData.ContainsKey(REGION_BUFF_MAPPING_KEY))
+    {
+      ModData[REGION_BUFF_MAPPING_KEY] = new Dictionary<int, RegionBuffConfig>();
+      needsSave = true;
+      Core.Log.LogInfo("Initialized default region buff mapping for backwards compatibility");
     }
 
     // Add other backwards compatibility initializations here as needed
@@ -241,5 +251,46 @@ public static class ModDataService
     }
 
     return result;
+  }
+
+  // Region Buff Mapping helpers
+  public static Dictionary<int, RegionBuffConfig> GetRegionBuffMapping()
+  {
+    if (ModData.TryGetValue(REGION_BUFF_MAPPING_KEY, out var data) && data is JsonElement element)
+    {
+      try
+      {
+        return JsonSerializer.Deserialize<Dictionary<int, RegionBuffConfig>>(element)
+               ?? new Dictionary<int, RegionBuffConfig>();
+      }
+      catch (Exception ex)
+      {
+        Core.Log.LogError($"Failed to deserialize region buff mapping: {ex.Message}");
+        return new Dictionary<int, RegionBuffConfig>();
+      }
+    }
+    else if (ModData.TryGetValue(REGION_BUFF_MAPPING_KEY, out var dictObj) && dictObj is Dictionary<int, RegionBuffConfig> dict)
+    {
+      return dict;
+    }
+    return new Dictionary<int, RegionBuffConfig>();
+  }
+
+  public static void SetRegionBuffConfig(int regionId, RegionBuffConfig config)
+  {
+    var mapping = GetRegionBuffMapping();
+    mapping[regionId] = config;
+    ModData[REGION_BUFF_MAPPING_KEY] = mapping;
+    SaveData();
+  }
+
+  public static void RemoveRegionBuffConfig(int regionId)
+  {
+    var mapping = GetRegionBuffMapping();
+    if (mapping.Remove(regionId))
+    {
+      ModData[REGION_BUFF_MAPPING_KEY] = mapping;
+      SaveData();
+    }
   }
 }

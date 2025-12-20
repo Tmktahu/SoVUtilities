@@ -9,6 +9,7 @@ using Backtrace.Unity.Model;
 using ProjectM;
 using ProjectM.Network;
 using ProjectM.Terrain;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -27,6 +28,11 @@ internal class RegionService
   Dictionary<string, int> maxPlayerLevels = [];
   List<string> allowPlayers = [];
   Dictionary<string, List<string>> banPlayers = [];
+
+  // Tracks each player's last known region (non-persistent)
+  private readonly Dictionary<Entity, WorldRegionType> _playerLastRegion = new();
+  // Flag to force update buffs for all players
+  private static bool _forceUpdateAllPlayers = false;
 
   public IEnumerable<WorldRegionType> LockedRegions => lockedRegions;
   public IEnumerable<KeyValuePair<string, int>> GatedRegions => gatedRegions;
@@ -51,6 +57,26 @@ internal class RegionService
     public Dictionary<string, string[]> BanPlayers { get; set; }
   }
 
+  // mapping of region type to tag
+  public static readonly Dictionary<WorldRegionType, string> RegionTypeToTag = new()
+  {
+    { WorldRegionType.CursedForest, TagService.Tags.CURSED_FOREST },
+    { WorldRegionType.DunleyFarmlands, TagService.Tags.DUNLEY_FARMLANDS },
+    { WorldRegionType.FarbaneWoods, TagService.Tags.FARBANE_WOODS },
+    { WorldRegionType.Gloomrot_North, TagService.Tags.GLOOMROT_NORTH },
+    { WorldRegionType.Gloomrot_South, TagService.Tags.GLOOMROT_SOUTH },
+    { WorldRegionType.HallowedMountains, TagService.Tags.HALLOWED_MOUNTAINS },
+    { WorldRegionType.None, TagService.Tags.NONE_REGION },
+    { WorldRegionType.Other, TagService.Tags.OTHER_REGION },
+    { WorldRegionType.RuinsOfMortium, TagService.Tags.RUINS_OF_MORTIUM },
+    { WorldRegionType.SilverlightHills, TagService.Tags.SILVERLIGHT_HILLS },
+    { WorldRegionType.StartCave, TagService.Tags.START_CAVE },
+    { WorldRegionType.Strongblade, TagService.Tags.OAKVEIL_FOREST }
+  };
+
+  // mapping of tag to region type
+  public static readonly Dictionary<string, WorldRegionType> TagToRegionType = RegionTypeToTag.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
   public RegionService()
   {
     // LoadRegions();
@@ -69,216 +95,177 @@ internal class RegionService
         });
     }
 
-    Core.StartCoroutine(CheckPlayerRegions());
+    // Core.StartCoroutine(CheckPlayerRegions());
   }
 
-  // public bool LockRegion(WorldRegionType region)
-  // {
-  // 	if (lockedRegions.Contains(region))
-  // 	{
-  // 		return false;
-  // 	}
-
-  // 	lockedRegions.Add(region);
-  // 	SaveRegions();
-  // 	return true;
-  // }
-
-  // public bool UnlockRegion(WorldRegionType region)
-  // {
-  // 	var result = lockedRegions.Remove(region);
-  // 	SaveRegions();
-  // 	return result;
-  // }
-
-  // public void GateRegion(WorldRegionType region, int level)
-  // {
-  // 	gatedRegions[region.ToString()] = level;
-  // 	SaveRegions();
-  // }
-
-  // public bool UngateRegion(WorldRegionType region)
-  // {
-  // 	var result = gatedRegions.Remove(region.ToString());
-  // 	SaveRegions();
-  // 	return result;
-  // }
-
-  // public void AllowPlayer(string playerName)
-  // {
-  // 	if(allowPlayers.Contains(playerName))
-  // 		return;
-  // 	allowPlayers.Add(playerName);
-  // 	SaveRegions();
-  // }
-
-  // public void RemovePlayer(string playerName)
-  // {
-  // 	allowPlayers.Remove(playerName);
-  // 	SaveRegions();
-  // }
-
-  // public void BanPlayerFromRegion(string playerName, WorldRegionType region)
-  // {
-  // 	if (!banPlayers.TryGetValue(playerName, out var regions))
-  // 	{
-  // 		regions = new List<string>();
-  // 		banPlayers[playerName] = regions;
-  // 	}
-  // 	regions.Add(region.ToString());
-  // 	SaveRegions();
-  // }
-
-  // public void UnbanPlayerFromRegion(string playerName, WorldRegionType region)
-  // {
-  // 	if (banPlayers.TryGetValue(playerName, out var regions))
-  // 	{
-  // 		regions.Remove(region.ToString());
-  // 		if (regions.Count == 0)
-  // 			banPlayers.Remove(playerName);
-  // 	}
-  // 	SaveRegions();
-  // }
-
-
-
-  // public int GetPlayerMaxLevel(string playerName)
-  // {
-  // 	if (maxPlayerLevels.TryGetValue(playerName, out var level))
-  // 		return Mathf.FloorToInt(level);
-  // 	return 0;
-  // }
-
-  IEnumerator CheckPlayerRegions()
+  // Call this method to trigger a force update on all players
+  public void ForceUpdateAllPlayers()
   {
-    while (true)
+    _forceUpdateAllPlayers = true;
+  }
+
+  public void ResetForceUpdateFlag()
+  {
+    _forceUpdateAllPlayers = false;
+  }
+
+  public void CheckPlayerRegions(Entity userEntity)
+  {
+    if (Core.PlayerService == null)
+      return;
+
+    if (_forceUpdateAllPlayers)
     {
-      foreach (var userEntity in Core.PlayerService.GetCachedUsersOnline())
+      // Remove and re-apply buffs for all players
+      // foreach (var userEntity in )
+      // {
+      if (!userEntity.Has<User>()) return;
+      var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
+      if (!charEntity.Has<Equipment>()) return;
+      var pos = charEntity.Read<Translation>().Value;
+      WorldRegionType currentWorldRegion = GetRegion(pos);
+
+      // Remove all region buffs
+      var regionBuffs = ModDataService.GetRegionBuffMapping();
+      foreach (var kvp in regionBuffs)
       {
-        if (!userEntity.Has<User>()) continue;
-
-        var charName = userEntity.Read<User>().CharacterName.ToString();
-
-        if (String.IsNullOrEmpty(charName)) continue;
-
-        var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
-        if (!charEntity.Has<Equipment>()) continue;
-
-        var pos = charEntity.Read<Translation>().Value;
-        var currentWorldRegion = GetRegion(pos);
-        // var equipment = charEntity.Read<Equipment>();
-        // var maxLevel = Mathf.Max(Mathf.RoundToInt(equipment.ArmorLevel+equipment.SpellLevel+equipment.WeaponLevel),
-        // 						 maxPlayerLevels.TryGetValue(charName, out var cachedLevel) ? cachedLevel : 0);
-
-        // if (maxLevel > cachedLevel)
-        // {
-        // 	maxPlayerLevels[charName] = maxLevel;
-        // 	SaveRegions();
-        // }
-
-
-        // if they have a matching region tag, we let them in
-        // if they don't, we want to hit them with configured buff codes
-
-
-
-
-
-
-        var returnReason = DisallowedFromRegion(userEntity, currentWorldRegion);
-        if (returnReason != null)
-        {
-          // ReturnPlayer(userEntity, returnReason);
-        }
-        else if (charEntity.Has<Dead>())
-        {
-          lastValidPos.Remove(userEntity);
-        }
-        else
-        {
-          lastValidPos[userEntity] = (currentWorldRegion, charEntity.Read<Translation>().Value);
-        }
-        yield return null;
+        RemoveRegionBuffs(charEntity, kvp.Value.BuffIds);
       }
-      yield return null;
-    }
-  }
 
-  string DisallowedFromRegion(Entity userEntity, WorldRegionType region)
-  {
-    var charName = userEntity.Read<User>().CharacterName.ToString();
-    if (allowPlayers.Contains(charName))
-      return null;
+      // Apply buffs for current region if enabled
+      if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig buffConfig) && buffConfig.Enabled)
+      {
+        ApplyRegionBuffs(charEntity, buffConfig.BuffIds);
+      }
 
-    // if (banPlayers.TryGetValue(charName, out var regions))
-    // {
-    // 	if (regions.Contains(region.ToString()))
-    // 		return $"You are banned from region {region.ToString()}";
-    // }
+      // Update last known region
+      _playerLastRegion[charEntity] = currentWorldRegion;
 
-    // if (!maxPlayerLevels.TryGetValue(charName, out var maxLevel))
-    // 	maxLevel = 0;
-
-    if (lockedRegions.Contains(region))
-    {
-      return $"Can't enter region {region.ToString()} as it's locked";
-    }
-    // else if(gatedRegions.TryGetValue(region.ToString(), out var level) && maxLevel < level)
-    // {
-    // 	return $"Can't enter region {region.ToString()} as it's gated to level {level} while your max reached level is only {Mathf.FloorToInt(maxLevel)}";
-    // }
-
-    return null;
-  }
-
-  void ReturnPlayer(Entity userEntity, string returnReason)
-  {
-    var returnPos = Vector3.zero;
-    if (lastValidPos.TryGetValue(userEntity, out var lastValid) && DisallowedFromRegion(userEntity, lastValid.Item1) == null)
-    {
-      returnPos = lastValid.Item2;
+      // _forceUpdateAllPlayers = false;
     }
     else
     {
-      // Alright if they aren't in a valid region then need to find the closest waypoint that is in a valid region
-      // Note not checking what is unlocked so they can return to a waypoint they haven't unlocked yet
-      var waypoints = EntityService.GetEntitiesByComponentType<ChunkWaypoint>();
-      var waypointArray = waypoints.ToArray();
-      waypoints.Dispose();
+      // foreach (var userEntity in Core.PlayerService.GetCachedUsersOnline())
+      // {
+      if (!userEntity.Has<User>()) return;
+      var charName = userEntity.Read<User>().CharacterName.ToString();
+      if (string.IsNullOrEmpty(charName)) return;
 
-      var charPos = userEntity.Read<User>().LocalCharacter.GetEntityOnServer().Read<Translation>().Value;
-      returnPos = waypointArray.Where(x =>
+      var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
+      if (!charEntity.Has<Equipment>()) return;
+      var pos = charEntity.Read<Translation>().Value;
+      WorldRegionType currentWorldRegion = GetRegion(pos);
+
+      // Track last known region for this player
+      WorldRegionType lastRegion = WorldRegionType.None;
+      _playerLastRegion.TryGetValue(charEntity, out lastRegion);
+
+      // Only act if region changed
+      if (lastRegion != currentWorldRegion)
       {
-        if (!x.Has<UserOwner>())
-          return true;
-        var owner = x.Read<UserOwner>().Owner.GetEntityOnServer();
-        return owner == Entity.Null || owner == userEntity;
-      }).
-      Select(x => x.Read<Translation>().Value).
-      OrderBy(waypointPos =>
-      {
-        var charPos = userEntity.Read<User>().LocalCharacter.GetEntityOnServer().Read<Translation>().Value;
-        return Vector3.Distance(waypointPos, charPos);
-      }).
-      Where(waypointPos =>
-      {
-        var region = GetRegion(waypointPos);
-        return DisallowedFromRegion(userEntity, region) == null;
-      }).
-      FirstOrDefault();
+        // Remove buffs from previous region if any
+        if (lastRegion != WorldRegionType.None)
+        {
+          var regionBuffs = ModDataService.GetRegionBuffMapping();
+          if (regionBuffs.TryGetValue((int)lastRegion, out RegionBuffConfig prevBuffConfig))
+          {
+            RemoveRegionBuffs(charEntity, prevBuffConfig.BuffIds);
+          }
+        }
+
+        // Apply buffs for new region if any
+        if (currentWorldRegion != WorldRegionType.None)
+        {
+          var regionBuffs = ModDataService.GetRegionBuffMapping();
+          if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig newBuffConfig))
+          {
+            if (newBuffConfig.Enabled)
+            {
+              ApplyRegionBuffs(charEntity, newBuffConfig.BuffIds);
+            }
+          }
+        }
+
+        // Update last known region
+        _playerLastRegion[charEntity] = currentWorldRegion;
+      }
+      // }
     }
+  }
 
-    if (!lastSentMessage.TryGetValue(userEntity, out var lastSent) ||
-            lastSent + 10 < Time.time)
+  void ApplyRegionBuffs(Entity characterEntity, List<int> buffIds)
+  {
+    foreach (var buffId in buffIds)
     {
-      FixedString512Bytes message = returnReason;
-      ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, userEntity.Read<User>(), ref message);
-      lastSentMessage[userEntity] = Time.time;
+      PrefabGUID currentBuffPrefabGUID = new PrefabGUID(buffId);
+      BuffService.ApplyPermanentBuff(characterEntity, currentBuffPrefabGUID);
+    }
+  }
+
+  void RemoveRegionBuffs(Entity characterEntity, List<int> buffIds)
+  {
+    foreach (var buffId in buffIds)
+    {
+      PrefabGUID currentBuffPrefabGUID = new PrefabGUID(buffId);
+      BuffService.RemoveBuff(characterEntity, currentBuffPrefabGUID);
+    }
+  }
+
+  public void AddBuffToRegion(WorldRegionType region, PrefabGUID buffPrefabGuid)
+  {
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+    if (!regionBuffs.TryGetValue((int)region, out RegionBuffConfig buffConfig))
+    {
+      buffConfig = new RegionBuffConfig
+      {
+        Enabled = true,
+        BuffIds = new List<int>()
+      };
+      regionBuffs[(int)region] = buffConfig;
     }
 
-    var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
-    charEntity.Write(new Translation { Value = returnPos });
-    charEntity.Write(new LastTranslation { Value = returnPos });
+    if (!buffConfig.BuffIds.Contains(buffPrefabGuid._Value))
+    {
+      buffConfig.BuffIds.Add(buffPrefabGuid._Value);
+      ModDataService.SetRegionBuffConfig((int)region, buffConfig);
+      ForceUpdateAllPlayers();
+    }
+  }
+
+  public void RemoveBuffFromRegion(WorldRegionType region, PrefabGUID buffPrefabGuid)
+  {
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+    if (regionBuffs.TryGetValue((int)region, out RegionBuffConfig buffConfig))
+    {
+      if (buffConfig.BuffIds.Contains(buffPrefabGuid._Value))
+      {
+        buffConfig.BuffIds.Remove(buffPrefabGuid._Value);
+        ModDataService.SetRegionBuffConfig((int)region, buffConfig);
+        ForceUpdateAllPlayers();
+      }
+    }
+  }
+
+  public void EnableRegionBuffs(WorldRegionType region)
+  {
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+    if (regionBuffs.TryGetValue((int)region, out RegionBuffConfig buffConfig))
+    {
+      buffConfig.Enabled = true;
+      ModDataService.SetRegionBuffConfig((int)region, buffConfig);
+      ForceUpdateAllPlayers();
+    }
+  }
+
+  public void DisableRegionBuffs(WorldRegionType region)
+  {
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+    if (regionBuffs.TryGetValue((int)region, out RegionBuffConfig buffConfig))
+    {
+      buffConfig.Enabled = false;
+      ModDataService.SetRegionBuffConfig((int)region, buffConfig);
+      ForceUpdateAllPlayers();
+    }
   }
 
   public WorldRegionType GetRegion(float3 pos)
@@ -311,34 +298,5 @@ internal class RegionService
     }
 
     return intersections % 2 != 0;
-  }
-
-
-  internal class RegionConverter : JsonConverter<WorldRegionType>
-  {
-    public override WorldRegionType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-      if (reader.TokenType != JsonTokenType.String)
-      {
-        throw new JsonException();
-      }
-
-      reader.GetString();
-
-      foreach (var value in Enum.GetValues<WorldRegionType>())
-      {
-        if (value.ToString() == reader.GetString())
-        {
-          return value;
-        }
-      }
-
-      return WorldRegionType.None;
-    }
-
-    public override void Write(Utf8JsonWriter writer, WorldRegionType value, JsonSerializerOptions options)
-    {
-      writer.WriteStringValue(value.ToString());
-    }
   }
 }

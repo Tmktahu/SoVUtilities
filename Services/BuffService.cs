@@ -18,6 +18,7 @@ internal static class BuffService
   static ServerGameManager ServerGameManager => Core.ServerGameManager;
   static EntityManager EntityManager => Core.EntityManager;
 
+  public static readonly PrefabGUID globalStatsBuff = PrefabGUIDs.SetBonus_AllLeech_T09;
   static readonly PrefabGUID razerHood = PrefabGUIDs.Item_Headgear_RazerHood;
   public static readonly PrefabGUID HideNameplateBuffGuid = PrefabGUIDs.AB_Cursed_ToadKing_Spit_HideHUDCastBuff;
 
@@ -64,6 +65,22 @@ internal static class BuffService
 
     // Apply the buff
     DebugEventsSystem.ApplyBuff(fromCharacter, applyBuffDebugEvent);
+  }
+
+  public static void ApplyPermanentBuff(Entity entity, PrefabGUID buffPrefabGuid)
+  {
+    // if they already have the buff we do nothing
+    if (HasBuff(entity, buffPrefabGuid))
+      return;
+
+    ApplyBuff(entity, buffPrefabGuid);
+
+    if (!TryGetBuff(entity, buffPrefabGuid, out Entity buffEntity))
+    {
+      Core.Log.LogWarning($"Failed to get buff entity for {buffPrefabGuid} on {entity}. Not making it permanent.");
+      return;
+    }
+    makeBuffPermanent(buffEntity);
   }
 
   public static IEnumerator RefreshPlayerBuffs(Entity playerCharacter)
@@ -252,5 +269,37 @@ internal static class BuffService
     }
 
     return playersWithBuff;
+  }
+
+  public static void UpdateGlobalStatBuff(Entity characterEntity, int gearscoreBonus)
+  {
+    // if (TryGetBuff(characterEntity, globalStatsBuff, out Entity buffEntity))
+    // {
+    //   if (buffEntity.TryGetComponent<ArmorLevel>(out var armorLevelComp))
+    //   {
+    //     if (armorLevelComp.Level == gearscoreBonus)
+    //       return; // no change needed
+
+    //     Core.Log.LogInfo($"BuffService: Updating global stat buff ArmorLevel to {gearscoreBonus} for character entity {characterEntity.Index}.");
+    //     armorLevelComp.Level = gearscoreBonus;
+    //     EntityManager.SetComponentData(buffEntity, armorLevelComp);
+    //   }
+    //   else
+    //   {
+    //     Core.Log.LogInfo($"BuffService: Adding ArmorLevel component with level {gearscoreBonus} to global stat buff for character entity {characterEntity.Index}.");
+    //     // we add the component if it doesn't exist
+    //     ArmorLevel armorLevelCompNew = new ArmorLevel
+    //     {
+    //       Level = gearscoreBonus,
+    //       ModificationId = Core.ModificationIdGenerator.NewModificationId()
+    //     };
+
+    //     EntityManager.AddComponentData(buffEntity, armorLevelCompNew);
+    //   }
+    // }
+    // else
+    // {
+    //   Core.Log.LogInfo($"BuffService: Buff entity for global stats buff not found on character entity {characterEntity.Index}.");
+    // }
   }
 }
