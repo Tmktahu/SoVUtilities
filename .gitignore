@@ -2,4 +2,3 @@
 /obj
 *.sln
 ReferenceItemGroup.txt
-GenerateReferences.ps1

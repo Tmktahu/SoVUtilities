@@ -45,11 +45,11 @@ internal static class Apply_BuffModificationsSystem_ServerPatch
 
         bool isPlayerTarget = playerCharacterLookup.HasComponent(buffTarget);
 
-        Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Buff Applied: {buffPrefabGUID} to {buffTarget}");
+        // Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Buff Applied: {buffPrefabGUID} to {buffTarget}");
 
         if (isPlayerTarget)
         {
-          Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Player Buff Applied: {buffPrefabGUID} to {buffTarget}");
+          // Core.Log.LogInfo($"[Apply_BuffModificationsSystem_ServerPatch] - Player Buff Applied: {buffPrefabGUID} to {buffTarget}");
         }
       }
     }

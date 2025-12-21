@@ -1,37 +1,41 @@
-// using System.Text;
-// using System.Text.Json;
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
-// namespace SoVUtilities.Services;
+namespace SoVUtilities.Services
+{
+  public static class DiscordWebhookService
+  {
+    private static readonly HttpClient _httpClient = new HttpClient();
+    private const string WebhookUrl = "https://discord.com/api/webhooks/1451815135793516646/O5UHUdYqJhMPtXUhFioc5WJaF-o3F2VJxVbaCBHHprbSPxO0fzU3j7DE4vvjWG0LZJr7";
 
-// public static class DiscordWebhookService
-// {
-//   private static readonly HttpClient _httpClient = new HttpClient();
+    // Minimal async method for POC
+    public static async Task SendTestMessageAsync()
+    {
+      try
+      {
+        var payload = new { content = "Test message from VRising mod." };
+        string json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-//   public static async Task SendMessageAsync(string webhookUrl, string message)
-//   {
-//     try
-//     {
-//       var payload = new { content = message };
-//       string json = JsonSerializer.Serialize(payload);
-//       var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(WebhookUrl, content);
 
-//       var response = await _httpClient.PostAsync(webhookUrl, content);
-
-//       if (!response.IsSuccessStatusCode)
-//       {
-//         string errorContent = await response.Content.ReadAsStringAsync();
-//         Core.Log.LogError($"Discord webhook failed with status {response.StatusCode}: {errorContent}");
-//       }
-//     }
-//     catch (Exception ex)
-//     {
-//       Core.Log.LogError($"Failed to send Discord webhook message: {ex.Message}");
-//     }
-//   }
-
-//   // Fire-and-forget method for synchronous contexts
-//   public static void SendMessage(string webhookUrl, string message)
-//   {
-//     _ = Task.Run(async () => await SendMessageAsync(webhookUrl, message));
-//   }
-// }
+        if (!response.IsSuccessStatusCode)
+        {
+          string errorContent = await response.Content.ReadAsStringAsync();
+          Console.WriteLine($"Discord webhook failed: {response.StatusCode} - {errorContent}");
+        }
+        else
+        {
+          Console.WriteLine("Discord webhook sent successfully.");
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Exception sending Discord webhook: {ex.Message}");
+      }
+    }
+  }
+}

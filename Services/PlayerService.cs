@@ -247,23 +247,25 @@ internal class PlayerService
 
     foreach (var buffEntity in buffEntities)
     {
+      string equippedCategory = null;
       if (buffEntity.Read<EntityOwner>().Owner == playerEntity)
       {
         // we need to get the name of the buff, so we need its prefab GUID
         PrefabGUID buff = Core.EntityManager.GetComponentData<PrefabGUID>(buffEntity);
         string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(buff);
 
-        string equippedCategory = null;
         AbilityService.weaponCategories.ForEach(category =>
         {
           if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
           {
             equippedCategory = category;
+            return;
           }
         });
-
-        return equippedCategory;
       }
+
+      if (equippedCategory != null)
+        return equippedCategory;
     }
 
     return "Unknown";
