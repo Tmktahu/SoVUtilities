@@ -6,6 +6,7 @@ using Unity.Entities;
 using Stunlock.Core;
 using SoVUtilities.Resources;
 using SoVUtilities.Models;
+using SoVUtilities.Services.Buffs;
 
 namespace SoVUtilities.Patches;
 
@@ -41,6 +42,14 @@ internal static class ReplaceAbilityOnSlotSystemPatch
                     {
                         PlayerData playerData = PlayerDataService.GetPlayerData(character);
                         int[] abilitySlotPrefabGUIDs = null;
+
+                        // if they have the werewolf tag and are in werewolf form, we apply the werewolf abilities instead
+                        if (playerData.HasTag(TagService.Tags.WEREWOLF) && WerewolfBuff.HasBuff(character))
+                        {
+                            abilitySlotPrefabGUIDs = WerewolfBuff.abilitySlotPrefabGUIDs;
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs);
+                            continue;
+                        }
 
                         // for each category, check if the prefabName contains it
                         // and if so, get the corresponding abilitySlotPrefabGUIDs

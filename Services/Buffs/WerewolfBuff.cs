@@ -9,7 +9,17 @@ namespace SoVUtilities.Services.Buffs;
 internal static class WerewolfBuff
 {
   public static readonly PrefabGUID WerewolfBuffBase = PrefabGUIDs.Buff_General_Shapeshift_Werewolf_Standard;
-
+  public static readonly int[] abilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_Werewolf_MeleeAttack_Group._Value, // Primary auto attack slot
+    PrefabGUIDs.AB_Werewolf_Bite_AbilityGroup._Value, // Secondary Q slot
+    PrefabGUIDs.AB_Shapeshift_Wolf_Leap_Travel_AbilityGroup._Value, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_WerewolfChieftain_Knockdown_AbilityGroup._Value, // Power slot E
+    PrefabGUIDs.AB_WerewolfChieftain_MultiBite_AbilityGroup._Value, // first spell slot R
+    PrefabGUIDs.AB_WerewolfChieftain_MultiBiteBuff_Hard_AbilityGroup._Value, // second spell slot C
+    PrefabGUIDs.AB_WerewolfChieftain_ShadowDash_Clone_AbilityGroup._Value // ultimate slot t
+  };
   static EntityManager EntityManager => Core.EntityManager;
   public static IEnumerator ApplyCustomBuff(Entity targetEntity)
   {
