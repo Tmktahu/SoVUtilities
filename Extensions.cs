@@ -210,4 +210,21 @@ public static class VExtensions
 
     return false;
   }
+
+  public delegate void WithRefHandler<T>(ref T item);
+  public static void With<T>(this Entity entity, WithRefHandler<T> action) where T : struct
+  {
+    T item = entity.Read<T>();
+    action(ref item);
+
+    EntityManager.SetComponentData(entity, item);
+  }
+
+  public static void HasWith<T>(this Entity entity, WithRefHandler<T> action) where T : struct
+  {
+    if (entity.Has<T>())
+    {
+      entity.With(action);
+    }
+  }
 }

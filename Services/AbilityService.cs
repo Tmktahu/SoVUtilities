@@ -6,6 +6,8 @@ using SoVUtilities.Services;
 using Il2CppSystem;
 using Unity.Collections;
 using SoVUtilities.Resources;
+using UnityEngine;
+using System.Collections;
 
 namespace SoVUtilities.Services;
 
@@ -111,6 +113,149 @@ public static class AbilityService
       { 6, AbilityTypeEnum.Ultimate }
   };
 
+  public static readonly string WOLF_COMBAT_FORM_TAG = "wolf_combat_form";
+  public static readonly string BEAR_COMBAT_FORM_TAG = "bear_combat_form";
+  public static readonly string TOAD_COMBAT_FORM_TAG = "toad_combat_form";
+  public static readonly string RAT_COMBAT_FORM_TAG = "rat_combat_form";
+  public static readonly string SPIDER_COMBAT_FORM_TAG = "spider_combat_form";
+  public static readonly string BAT_COMBAT_FORM_TAG = "bat_combat_form";
+
+  public static readonly Dictionary<PrefabGUID, string> CombatFormToTag = new Dictionary<PrefabGUID, string>
+  {
+    { PrefabGUIDs.AB_Shapeshift_Wolf_Buff, WOLF_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Wolf_Skin01_Buff, WOLF_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Wolf_PMK_Skin02_Buff, WOLF_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Wolf_Blackfang_Skin03_Buff, WOLF_COMBAT_FORM_TAG },
+    // { ShapeshiftBearBuff, BEAR_COMBAT_FORM_TAG },
+    // { ShapeshiftBearSkin01Buff, BEAR_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Toad_Buff, TOAD_COMBAT_FORM_TAG },
+    // { ShapeshiftToadSkin01Buff, TOAD_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Rat_Buff, RAT_COMBAT_FORM_TAG },
+    { PrefabGUIDs.AB_Shapeshift_Spider_Buff, SPIDER_COMBAT_FORM_TAG }
+  };
+
+  public static readonly PrefabGUID[] combatShapeshiftForms = new PrefabGUID[]
+  {
+    PrefabGUIDs.AB_Shapeshift_Wolf_Buff,
+    PrefabGUIDs.AB_Shapeshift_Wolf_Skin01_Buff,
+    PrefabGUIDs.AB_Shapeshift_Wolf_PMK_Skin02_Buff,
+    PrefabGUIDs.AB_Shapeshift_Wolf_Blackfang_Skin03_Buff,
+    PrefabGUIDs.AB_Shapeshift_Rat_Buff,
+    // ShapeshiftBearSkinBuff,
+    // ShapeshiftBearSkin01Buff,
+    PrefabGUIDs.AB_Shapeshift_Toad_Buff,
+    // ShapeshiftToadSkin01Buff,
+    PrefabGUIDs.AB_Shapeshift_Spider_Buff
+  };
+
+  // dictionary of prefabs to ability slot prefab GUID arrays
+  // public static readonly Dictionary<string, PrefabGUID[]> ShapeshiftAbilitySlots = new Dictionary<string, PrefabGUID[]>
+  // {
+  //   { WOLF_COMBAT_FORM_TAG, [
+  //     PrefabGUIDs.AB_Shapeshift_Wolf_Bite_Group,
+  //     PrefabGUIDs.AB_Wolf_Boss_Pounce_AbilityGroup,
+  //     PrefabGUIDs.AB_Shapeshift_Wolf_Leap_Travel_AbilityGroup,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.AB_Wolf_Shared_DashAttack_AbilityGroup,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty,
+  //     PrefabGUIDs.Zero
+  //   ] },
+  //   { TOAD_COMBAT_FORM_TAG, [
+  //     PrefabGUIDs.AB_Cursed_MonsterToad_TongueSlap_AbilityGroup,
+  //     PrefabGUIDs.AB_Cursed_MonsterToad_TongueGrab_AbilityGroup,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.AB_Cursed_MonsterToad_LeapAttack_Travel_AbilityGroup,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty
+  //   ] },
+  //   { RAT_COMBAT_FORM_TAG, [
+  //     PrefabGUIDs.AB_Vermin_Rat_MeleeAttack_AbilityGroup,
+  //     PrefabGUIDs.AB_Vermin_DireRat_Gnaw_AbilityGroup,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.AB_Shapeshift_Spider_Burrow_AbilityGroup,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty
+  //   ] },
+  //   { SPIDER_COMBAT_FORM_TAG, [
+  //     PrefabGUIDs.AB_Spider_Melee_MeleeAttack_Group,
+  //     PrefabGUIDs.AB_Spider_Forest_Webbing_AbilityGroup,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.Zero,
+  //     PrefabGUIDs.AB_Spider_Forest_BackStep_AbilityGroup,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty,
+  //     PrefabGUID.Empty
+  //   ] },
+  //   { BAT_COMBAT_FORM_TAG, [
+  //     // to be defined
+  //   ] }
+  // };
+
+  public static readonly int[] WolfFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_Shapeshift_Wolf_Bite_Group._Value, // Primary auto attack slot
+    PrefabGUIDs.AB_Wolf_Boss_Pounce_AbilityGroup._Value, // Secondary Q slot
+    PrefabGUIDs.AB_Shapeshift_Wolf_Leap_Travel_AbilityGroup._Value, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Wolf_Shared_DashAttack_AbilityGroup._Value, // Power slot E
+    -1, // first spell slot R, clear it completely
+    -1, // second spell slot C, clear it completely
+    0 // ultimate slot t, this is the normal wolf howl
+  };
+
+  public static readonly int[] ToadFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_Cursed_MonsterToad_TongueSlap_AbilityGroup._Value, // Primary auto attack slot
+    PrefabGUIDs.AB_Cursed_MonsterToad_TongueGrab_AbilityGroup._Value, // Secondary Q slot
+    0, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Cursed_MonsterToad_LeapAttack_Travel_AbilityGroup._Value, // Power slot E
+    -1, // first spell slot R, clear it completely
+    -1, // second spell slot C, clear it completely
+    -1 // ultimate slot t, clear it completely
+  };
+
+  public static readonly int[] RatFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_Vermin_Rat_MeleeAttack_AbilityGroup._Value, // Primary auto attack slot
+    PrefabGUIDs.AB_Vermin_DireRat_Gnaw_AbilityGroup._Value, // Secondary Q slot
+    0, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Shapeshift_Spider_Burrow_AbilityGroup._Value, // Power slot E
+    -1, // first spell slot R, clear it completely
+    -1, // second spell slot C, clear it completely
+    -1 // ultimate slot t, clear it completely
+  };
+
+  public static readonly int[] SpiderFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_Spider_Melee_MeleeAttack_Group._Value, // Primary auto attack slot
+    PrefabGUIDs.AB_Spider_Forest_Webbing_AbilityGroup._Value, // Secondary Q slot
+    0, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Spider_Forest_BackStep_AbilityGroup._Value, // Power slot E
+    -1, // first spell slot R, clear it completely
+    -1, // second spell slot C, clear it completely
+    -1 // ultimate slot t, clear it completely
+  };
+
+  public static readonly int[] BatFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    PrefabGUIDs.AB_BatSwarm_Melee_AbilityGroup._Value,
+    0,
+    0,
+    0,
+    PrefabGUIDs.AB_Dracula_ShadowBatSwarm_Dash_AbilityGroup._Value,
+    0,
+    0,
+    0
+  };
+
   public static void setAbility(Entity playerEntity, AbilityTypeEnum targetSlot, PrefabGUID abilityPrefab, string currentWeaponCategory)
   {
     // Get player data
@@ -176,36 +321,55 @@ public static class AbilityService
     PlayerDataService.SaveData();
   }
 
-  public static void ApplyAbilities(Entity playerEntity, Entity buffEntity, int[] abilitySlotPrefabGUIDs)
+  public static void ApplyAbilities(Entity playerEntity, Entity buffEntity, int[] abilitySlotPrefabGUIDs, int groupPriority = 1)
   {
     // first we want to get the abilities for the associated player
     if (abilitySlotPrefabGUIDs != null)
     {
       for (int i = 0; i < abilitySlotPrefabGUIDs.Length; i++)
       {
-        if (abilitySlotPrefabGUIDs[i] == 0) continue;
+        if (abilitySlotPrefabGUIDs[i] == 0) continue; // 0 means skip
 
         var abilityPrefab = new PrefabGUID(abilitySlotPrefabGUIDs[i]);
+
+        if (abilitySlotPrefabGUIDs[i] == -1)
+          abilityPrefab = PrefabGUIDs.Zero; // -1 means we actually want to set the slot to nothing
+
         if (abilityPrefab.HasValue())
         {
           // Apply the ability to the player
-          ApplyAbilityBuff(buffEntity, (AbilityTypeEnum)i, abilityPrefab);
+          ApplyAbilityBuff(buffEntity, (AbilityTypeEnum)i, abilityPrefab, groupPriority);
         }
       }
     }
   }
 
-  public static void ApplyAbilityBuff(Entity buffEntity, AbilityTypeEnum abilityType, PrefabGUID abilityGUID)
+  public static void ApplyAbilityBuff(Entity buffEntity, AbilityTypeEnum abilityType, PrefabGUID abilityGUID, int priority = 1)
   {
     var buffer = EntityManager.GetBuffer<ReplaceAbilityOnSlotBuff>(buffEntity);
 
-    ReplaceAbilityOnSlotBuff buff = new()
+    ReplaceAbilityOnSlotBuff buff;
+
+    if (abilityGUID.Equals(PrefabGUIDs.Zero))
     {
-      Slot = (int)abilityType,
-      NewGroupId = abilityGUID,
-      CopyCooldown = true,
-      Priority = 1,
-    };
+      buff = new()
+      {
+        Slot = (int)abilityType,
+        CopyCooldown = false,
+        CastBlockType = GroupSlotModificationCastBlockType.WholeCast,
+        Priority = 99,
+      };
+    }
+    else
+    {
+      buff = new()
+      {
+        Slot = (int)abilityType,
+        NewGroupId = abilityGUID,
+        CopyCooldown = true,
+        Priority = priority,
+      };
+    }
 
     buffer.Add(buff);
   }
@@ -233,5 +397,21 @@ public static class AbilityService
     }
 
     return PrefabGUID.Empty;
+  }
+
+  public static IEnumerator RefreshEquipBuff(Entity playerEntity)
+  {
+    PrefabGUID currentEquipBuff = PlayerService.GetEquipBuffPrefabGUID(playerEntity);
+    // to refresh the equip buff, we remove it and re-apply it
+    if (BuffService.HasBuff(playerEntity, currentEquipBuff))
+    {
+      BuffService.RemoveBuff(playerEntity, currentEquipBuff);
+    }
+
+    // yield return new WaitForSeconds(0.5f); // wait a short moment to ensure the buff is removed
+
+    BuffService.ApplyBuff(playerEntity, currentEquipBuff);
+
+    yield return null;
   }
 }

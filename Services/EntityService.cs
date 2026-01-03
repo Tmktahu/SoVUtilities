@@ -143,4 +143,60 @@ public static class EntityService
     var entities = query.ToEntityArray(Allocator.Temp);
     return entities;
   }
+
+  public static void ResetNearbyAggro(Entity targetEntity, float radius = 10f)
+  {
+    if (!EntityManager.HasComponent<Translation>(targetEntity))
+    {
+      Core.Log.LogWarning($"Target entity {targetEntity} does not have a Translation component.");
+      return;
+    }
+
+    var targetPos = EntityManager.GetComponentData<Translation>(targetEntity).Value;
+    var query = EntityManager.CreateEntityQuery(
+      ComponentType.ReadOnly<Translation>(),
+      ComponentType.ReadOnly<AggroConsumer>()
+    );
+    var entities = query.ToEntityArray(Allocator.Temp);
+
+    foreach (var entity in entities)
+    {
+      if (EntityManager.HasComponent<Translation>(entity))
+      {
+        var entityPos = EntityManager.GetComponentData<Translation>(entity).Value;
+        float distanceSquared =
+              (entityPos.x - targetPos.x) * (entityPos.x - targetPos.x) +
+              (entityPos.y - targetPos.y) * (entityPos.y - targetPos.y) +
+              (entityPos.z - targetPos.z) * (entityPos.z - targetPos.z);
+
+        if (distanceSquared <= radius * radius)
+        {
+          ResetAggro(entity, targetEntity);
+        }
+      }
+    }
+    entities.Dispose(); // Don't forget to dispose native arrays
+  }
+
+  public static void ResetAggro(Entity entity, Entity targetEntity)
+  {
+    if (EntityManager.HasComponent<AggroConsumer>(entity))
+    {
+      if (EntityManager.TryGetBuffer<AggroBuffer>(entity, out var aggroBuffer))
+      {
+        int index = 0;
+        foreach (var aggro in aggroBuffer)
+        {
+          Entity aggroTarget = aggro.Entity;
+
+          if (aggroTarget.Equals(targetEntity))
+          {
+            aggroBuffer.RemoveAt(index);
+            break;
+          }
+          index++;
+        }
+      }
+    }
+  }
 }

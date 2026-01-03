@@ -74,9 +74,9 @@ internal static class HumanBuff
         BloodValue = 0,
         BloodIdleValue = 0,
 
-        ModificationId = new ModificationId(),
-        ModificationIdleId = new ModificationId(),
-        IgnoreIdleDrainModId = new ModificationId(),
+        ModificationId = Core.ModificationIdGenerator.NewModificationId(),
+        ModificationIdleId = Core.ModificationIdGenerator.NewModificationId(),
+        IgnoreIdleDrainModId = Core.ModificationIdGenerator.NewModificationId(),
 
         ModificationPriority = 1000,
         ModificationIdlePriority = 1000,

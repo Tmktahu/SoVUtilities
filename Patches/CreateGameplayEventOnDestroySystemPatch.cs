@@ -73,6 +73,16 @@ internal static class CreateGameplayEventOnDestroySystemPatch
                     {
                         BuffService.RemoveHideNameplateBuff(playerCharacter);
                     }
+
+                    if (prefabGUID.Equals(PrefabGUIDs.Buff_InCombat))
+                    {
+                        if (!BuffService.HasBuff(entityOwner.Owner, PrefabGUIDs.Buff_InCombat))
+                        {
+                            // Core.Log.LogInfo($"We no longer have the InCombat buff.");
+                            TeamService.ResetTeam(entityOwner.Owner);
+                            // BuffService.RefreshPlayerBuffs(entityOwner.Owner).Start();
+                        }
+                    }
                 }
             }
         }

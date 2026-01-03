@@ -131,7 +131,6 @@ internal class PlayerService
       if (!EntityManager.HasComponent<Equipment>(charEntity))
         return;
 
-      // Core.Log.LogInfo($"PlayerService: Handling gearscore for character entity {charEntity.Index}.");
       var equipment = charEntity.Read<Equipment>();
       string characterName = userData.CharacterName.ToString().ToLower();
       if (namePlayerCache.TryGetValue(characterName, out var playerCacheData))
@@ -144,7 +143,6 @@ internal class PlayerService
           if (unarmedGearScore > 0)
           {
             // apply buff with unarmed gearscore
-            // BuffService.UpdateGlobalStatBuff(charEntity, unarmedGearScore);
             equipment.WeaponLevel._Value = unarmedGearScore;
             EntityManager.SetComponentData(charEntity, equipment);
           }
@@ -231,7 +229,6 @@ internal class PlayerService
 
   public IEnumerable<Entity> GetCachedUsersOnline()
   {
-    // Core.Log.LogInfo($"PlayerService: Getting cached online users. Cache size: {namePlayerCache.Count}");
     foreach (var pd in namePlayerCache.Values.ToArray())
     {
       var entity = pd.UserEntity;
@@ -240,32 +237,76 @@ internal class PlayerService
     }
   }
 
-  public static string GetEquippedWeaponCategory(Entity playerEntity)
+  public static Entity GetEquippedWeaponBuffEntity(Entity playerEntity)
   {
     // we get all buffs on the character and loop through them
     var buffEntities = EntityService.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
 
     foreach (var buffEntity in buffEntities)
     {
-      string equippedCategory = null;
       if (buffEntity.Read<EntityOwner>().Owner == playerEntity)
       {
         // we need to get the name of the buff, so we need its prefab GUID
         PrefabGUID buff = Core.EntityManager.GetComponentData<PrefabGUID>(buffEntity);
         string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(buff);
 
-        AbilityService.weaponCategories.ForEach(category =>
+        foreach (var category in AbilityService.weaponCategories)
         {
           if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
           {
-            equippedCategory = category;
-            return;
+            return buffEntity;
           }
-        });
+        }
+      }
+    }
+
+    return Entity.Null;
+  }
+
+  public static PrefabGUID GetEquipBuffPrefabGUID(Entity playerEntity)
+  {
+    // we get all buffs on the character and loop through them
+    var buffEntities = EntityService.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
+
+    foreach (var buffEntity in buffEntities)
+    {
+      PrefabGUID equippedWeaponPrefabGUID = default;
+      if (buffEntity.Read<EntityOwner>().Owner == playerEntity)
+      {
+        // we need to get the name of the buff, so we need its prefab GUID
+        PrefabGUID buff = Core.EntityManager.GetComponentData<PrefabGUID>(buffEntity);
+        string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(buff);
+
+        foreach (var category in AbilityService.weaponCategories)
+        {
+          if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
+          {
+            equippedWeaponPrefabGUID = buff;
+            break;
+          }
+        }
       }
 
-      if (equippedCategory != null)
-        return equippedCategory;
+      if (!equippedWeaponPrefabGUID.IsEmpty())
+        return equippedWeaponPrefabGUID;
+    }
+
+    return default;
+  }
+
+  public static string GetEquippedWeaponCategory(Entity playerEntity)
+  {
+    PrefabGUID equipBuffPrefabGUID = GetEquipBuffPrefabGUID(playerEntity);
+    if (!equipBuffPrefabGUID.IsEmpty())
+    {
+      string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(equipBuffPrefabGUID);
+      foreach (var category in AbilityService.weaponCategories)
+      {
+        if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase))
+        {
+          return category;
+        }
+      }
     }
 
     return "Unknown";

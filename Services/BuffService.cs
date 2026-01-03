@@ -8,6 +8,7 @@ using ProjectM.Shared;
 using System.Collections;
 using SoVUtilities.Services.Buffs;
 using UnityEngine;
+using ProjectM.Gameplay.Scripting;
 
 namespace SoVUtilities.Services;
 
@@ -18,10 +19,11 @@ internal static class BuffService
   static ServerGameManager ServerGameManager => Core.ServerGameManager;
   static EntityManager EntityManager => Core.EntityManager;
 
-  public static readonly PrefabGUID globalStatsBuff = PrefabGUIDs.SetBonus_AllLeech_T09;
+  // public static readonly PrefabGUID globalStatsBuff = PrefabGUIDs.SetBonus_AllLeech_T09;
   static readonly PrefabGUID razerHood = PrefabGUIDs.Item_Headgear_RazerHood;
   public static readonly PrefabGUID HideNameplateBuffGuid = PrefabGUIDs.AB_Cursed_ToadKing_Spit_HideHUDCastBuff;
 
+  public static string GlobalStatsBuffId = "global_stats_buff";
   public static string HumanBuffId = "human_buff";
   public static string HideNameplateBuffId = "hide_nameplate_buff";
   public static string AfflictedBuffId = "afflicted_buff";
@@ -33,8 +35,11 @@ internal static class BuffService
   public static string SpiritChosenBuffId = "spirit_chosen_buff";
   public static string WerewolfBuffId = "werewolf_buff";
   public static string WerewolfStatsBuffId = "werewolf_stats_buff";
+  public static string RotlingBuffId = "rotling_buff";
+  public static string WolfSpeedBuffId = "wolf_speed_buff";
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
+    // { GlobalStatsBuffId, new GlobalStatsCustomBuff() },
     { HumanBuffId, new HumanCustomBuff() },
     { HideNameplateBuffId, new HideNameplateCustomBuff() },
     { AfflictedBuffId, new AfflictedCustomBuff() },
@@ -45,6 +50,7 @@ internal static class BuffService
     { RelicBuffId, new RelicCustomBuff() },
     { SpiritChosenBuffId, new SpiritChosenCustomBuff() },
     { WerewolfStatsBuffId, new WerewolfStatsCustomBuff() },
+    { RotlingBuffId, new RotlingCustomBuff() }
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)
@@ -83,7 +89,7 @@ internal static class BuffService
     makeBuffPermanent(buffEntity);
   }
 
-  public static IEnumerator RefreshPlayerBuffs(Entity playerCharacter)
+  public static IEnumerator RefreshPlayerBuffs(Entity playerCharacter, GlobalStatBuffFlags[] flags = null)
   {
     // First, remove all buffs
     foreach (var buffId in AvailableBuffs.Keys)
@@ -98,10 +104,10 @@ internal static class BuffService
     foreach (var buffId in AvailableBuffs.Keys)
     {
       bool shouldHaveBuff = TagService.ShouldHaveBuff(playerCharacter, buffId);
-      if (shouldHaveBuff)
+      if (shouldHaveBuff || buffId == GlobalStatsBuffId)
       {
         // we only add the buff if the player should have it
-        AddCustomBuffToPlayer(playerCharacter, buffId);
+        AddCustomBuffToPlayer(playerCharacter, buffId, flags);
       }
     }
   }
@@ -215,11 +221,11 @@ internal static class BuffService
     }
   }
 
-  public static void AddCustomBuffToPlayer(Entity characterEntity, string buffId)
+  public static void AddCustomBuffToPlayer(Entity characterEntity, string buffId, GlobalStatBuffFlags[] flags = null)
   {
     if (TryGetCustomBuff(buffId, out var customBuff))
     {
-      customBuff.ApplyCustomBuff(characterEntity);
+      customBuff.ApplyCustomBuff(characterEntity, flags);
     }
     else
     {
@@ -269,6 +275,33 @@ internal static class BuffService
     }
 
     return playersWithBuff;
+  }
+
+  public static void MakeShapeshiftBuffStayOnDamage(Entity buffEntity)
+  {
+    if (EntityManager.TryGetComponentData<Script_Buff_Shapeshift_DataShared>(buffEntity, out var shapeshiftData))
+    {
+      shapeshiftData.RemoveOnDamageTaken = false; // change to not remove on damage taken
+      EntityManager.SetComponentData(buffEntity, shapeshiftData);
+    }
+  }
+
+  public static void MakeShapeshiftBuffRemoveOnDamage(Entity buffEntity)
+  {
+    if (EntityManager.TryGetComponentData<Script_Buff_Shapeshift_DataShared>(buffEntity, out var shapeshiftData))
+    {
+      shapeshiftData.RemoveOnDamageTaken = true; // change to remove on damage taken
+      EntityManager.SetComponentData(buffEntity, shapeshiftData);
+    }
+  }
+
+  public static void RemoveBatForm(Entity characterEntity)
+  {
+    if (HasBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff))
+    {
+      ApplyBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_Landing_Travel_End);
+      RemoveBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff);
+    }
   }
 
   public static void UpdateGlobalStatBuff(Entity characterEntity, int gearscoreBonus)

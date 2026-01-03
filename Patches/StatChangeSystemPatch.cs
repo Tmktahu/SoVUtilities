@@ -8,6 +8,10 @@ using System.Collections.Concurrent;
 using Unity.Collections;
 using Unity.Entities;
 using SoVUtilities.Resources;
+using ProjectM.Network;
+using SoVUtilities.Services;
+using System.Data;
+using SoVUtilities.Services.Buffs;
 
 namespace SoVUtilities.Patches;
 
@@ -39,6 +43,8 @@ internal static class StatChangeSystemPatch
                 StatChangeEvent statChangeEvent = entityManager.GetComponentData<StatChangeEvent>(statEntity);
                 PrefabGUID sourcePrefabGuid = statChangeEvent.Source.GetPrefabGuid();
                 Entity targetEntity = statChangeEvent.Entity;
+
+                bool isPlayerCharacter = entityManager.HasComponent<PlayerCharacter>(targetEntity);
 
                 if (statChangeEvent.StatType == StatType.Blood)
                 {
@@ -102,6 +108,103 @@ internal static class StatChangeSystemPatch
                     if (HasPlayerTag(targetEntity, HUMAN_TAG))
                     {
                         statEntity.Destroy(true);
+                    }
+                }
+
+                if (EntityManager.TryGetComponentData<EntityOwner>(statChangeEvent.Source, out var entityOwner))
+                {
+                    Entity ownerEntity = entityOwner.Owner;
+
+                    if (!ownerEntity.Exists() || !EntityManager.HasComponent<PrefabGUID>(ownerEntity)) continue;
+                    PrefabGUID ownerPrefabGuid = ownerEntity.GetPrefabGuid(); // this is the owner of the attack that triggered the damage
+                    PrefabGUID targetPrefabGuid = entityManager.GetComponentData<PrefabGUID>(targetEntity);
+
+                    // Core.Log.LogInfo($"[StatChangeSystem] Processing attack from owner prefab: {ownerPrefabGuid.ToString()} to target prefab: {targetPrefabGuid.ToString()}");
+
+                    if (statChangeEvent.StatType == StatType.Health && isPlayerCharacter && statChangeEvent.Change < 0)
+                    {
+                        // remove the wolf speed buff if they take damage
+                        if (WolfSpeedBuff.HasBuff(targetEntity))
+                        {
+                            WolfSpeedBuff.RemoveBuff(targetEntity);
+                        }
+                    }
+
+                    if (statChangeEvent.StatType == StatType.Health && isPlayerCharacter && ownerPrefabGuid.Equals(PrefabGUIDs.CHAR_VampireMale) && !targetEntity.Equals(ownerEntity) && statChangeEvent.Change < 0)
+                    {
+
+                        // debug info log statements
+                        float change = statChangeEvent.Change;
+                        float originalChange = statChangeEvent.OriginalChange;
+                        int statChangeFlags = statChangeEvent.StatChangeFlags;
+                        StatChangeReason statChangeReason = statChangeEvent.Reason;
+                        var modTypes = (ProjectM.StatChangeFlag)statChangeFlags;
+                        // Core.Log.LogInfo($"[StatChangeSystem] Health Change Event - Target: {targetEntity}, Change: {change}, OriginalChange: {originalChange}, StatChangeFlags: {statChangeFlags}, Reason: {statChangeReason}, SourcePrefabGuid: {sourcePrefabGuid}");
+                        // Core.Log.LogInfo($"StatChangeFlag Types: {modTypes.ToString()}");
+
+                        Entity userEntity = targetEntity.GetUserEntity();
+                        if (EntityManager.TryGetComponentData<Shapeshift>(userEntity, out var shapeshift))
+                        {
+                            if (shapeshift.IsShapeshifted)
+                            {
+                                // Core.Log.LogInfo($"[StatChangeSystem] Target is shapeshifted.");
+                                foreach (PrefabGUID transformationBuff in AbilityService.combatShapeshiftForms)
+                                {
+                                    if (BuffService.TryGetBuff(targetEntity, transformationBuff, out Entity buffEntity))
+                                    {
+                                        BuffService.DestroyBuff(buffEntity);
+                                        // BuffService.RefreshPlayerBuffs(entityOwner.Owner).Start();
+                                        break;
+                                    }
+                                }
+                                BuffService.RemoveBatForm(targetEntity);
+                            }
+                        }
+
+                        // statEntity.Destroy(true); // prevent the health change
+                        // modTypes |= ProjectM.StatChangeFlag.IsDoT; // example modification: add IsDoT flag
+                        // statChangeEvent.StatChangeFlags = (int)modTypes;
+                        // entityManager.SetComponentData(statEntity, statChangeEvent);
+                    }
+
+
+                    if (ownerPrefabGuid.Equals(PrefabGUIDs.CHAR_VampireMale))
+                    {
+                        Team playerTeam;
+                        Team targetTeam;
+
+                        if (EntityManager.TryGetComponentData<Team>(ownerEntity, out playerTeam) &&
+                            EntityManager.TryGetComponentData<Team>(targetEntity, out targetTeam))
+                        {
+                            int playerFactionIndex = playerTeam.FactionIndex;
+                            int targetFactionIndex = targetTeam.FactionIndex;
+                            // Core.Log.LogInfo($"[StatChangeSystem] Player Faction Index: {playerFactionIndex}");
+                            // Core.Log.LogInfo($"[StatChangeSystem] Target Faction Index: {targetFactionIndex}");
+
+                            Entity playerFactionEntity;
+                            Entity targetFactionEntity;
+
+                            FactionLookupSingleton factionLookupSingleton = Core.FactionLookupSystem.GetSingleton<FactionLookupSingleton>();
+
+                            factionLookupSingleton.TryGetPrefabEntity(playerFactionIndex, out playerFactionEntity);
+                            factionLookupSingleton.TryGetPrefabEntity(targetFactionIndex, out targetFactionEntity);
+
+                            PrefabGUID playerFactionPrefabGuid = playerFactionEntity.GetPrefabGuid();
+                            PrefabGUID targetFactionPrefabGuid = targetFactionEntity.GetPrefabGuid();
+
+                            if (!targetFactionPrefabGuid.Equals(PrefabGUIDs.Faction_Players))
+                            {
+                                // if they are equal to each other, then we have a player allied to the target they are hitting
+                                if (playerFactionPrefabGuid.Equals(targetFactionPrefabGuid))
+                                {
+                                    if (BuffService.HasBuff(ownerEntity, PrefabGUIDs.Buff_InCombat))
+                                    {
+                                        // Core.Log.LogInfo($"[StatChangeSystem] Player {playerFactionPrefabGuid} is allied with Target {targetFactionPrefabGuid}");
+                                        TeamService.SetToPlayerFaction(ownerEntity);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

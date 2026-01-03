@@ -27,6 +27,7 @@ internal static class Core
   public static ModificationIDs ModificationIdGenerator = Core.ModificationIdGenerator;
   public static PlayerService PlayerService { get; private set; }
   public static RegionService RegionService { get; private set; }
+  public static SequenceService SequenceService { get; private set; }
   public static EntityManager EntityManager => World.EntityManager;
   private static SystemService _systemService;
   public static SystemService SystemService => _systemService ??= new(World);
@@ -35,6 +36,8 @@ internal static class Core
   public static ServerBootstrapSystem ServerBootstrapSystem => SystemService.ServerBootstrapSystem;
   public static SetMapMarkerSystem SetMapMarkerSystem => SystemService.SetMapMarkerSystem;
   public static DebugEventsSystem DebugEventsSystem => SystemService.DebugEventsSystem;
+  public static FactionLookupSystem FactionLookupSystem => SystemService.FactionLookupSystem;
+
   static MonoBehaviour _monoBehaviour;
 
   public static void Initialize()
@@ -44,6 +47,7 @@ internal static class Core
 
     RegionService = new RegionService();
     PlayerService = new PlayerService();
+    SequenceService = new SequenceService();
     // DiscordWebhookService.SendTestMessageAsync();
 
     // Initialize mod data service

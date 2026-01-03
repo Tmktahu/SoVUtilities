@@ -5,6 +5,7 @@ using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 using ProjectM.Network;
+using ProjectM.Sequencer;
 
 namespace SoVUtilities.Services;
 
@@ -17,6 +18,7 @@ internal static class QueryService
     static readonly EntityQuery _buffSpawnServerQuery;
     static readonly EntityQuery _scriptSpawnServerQuery;
     static readonly EntityQuery _playerCharactersQuery;
+    static readonly EntityQuery _networkedSequenceQuery;
     static QueryService()
     {
         _updateBuffsBufferDestroyQuery = ModifyEntityQuery(
@@ -37,11 +39,16 @@ internal static class QueryService
         _playerCharactersQuery = EntityManager.CreateEntityQuery(
             ComponentType.ReadOnly<PlayerCharacter>()
         );
+
+        _networkedSequenceQuery = EntityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<SpawnSequenceForEntity>()
+        );
     }
     public static EntityQuery UpdateBuffsBufferDestroyQuery => _updateBuffsBufferDestroyQuery;
     public static EntityQuery BuffSpawnServerQuery => _buffSpawnServerQuery;
     public static EntityQuery ScriptSpawnServerQuery => _scriptSpawnServerQuery;
     public static EntityQuery PlayerCharactersQuery => _playerCharactersQuery;
+    public static EntityQuery NetworkedSequenceQuery => _networkedSequenceQuery;
     public static EntityQuery ModifyEntityQuery(EntityQuery originalQuery, ComponentType[] includeComponents = null, ComponentType[] excludeComponents = null)
     {
         /*

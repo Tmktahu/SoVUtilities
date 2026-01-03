@@ -11,6 +11,7 @@ public static class TagService
   {
     public const string ADMIN = "admin";
 
+    // Region Tags
     public const string CURSED_FOREST = "cursed_forest";
     public const string DUNLEY_FARMLANDS = "dunley_farmlands";
     public const string FARBANE_WOODS = "farbane_woods";
@@ -24,7 +25,14 @@ public static class TagService
     public const string START_CAVE = "start_cave";
     public const string OAKVEIL_FOREST = "oakveil_forest";
 
+    // Faction Tags
+    public const string FACTION_NOCTUM = "noctum"; // will be faction index 16
+    public const string FACTION_CULT = "cult_of_the_damned";
+    // leandra is faction index 29, same with skeleboys in the area
+    // undead dudes in forest are also 29
+    // cursed forest mobs are faction index 25
 
+    public const string ROTLING = "rotling";
     public const string AFFLICTED = "afflicted";
     public const string BEHOLDEN = "beholden";
     public const string ENCASED = "encased";
@@ -47,9 +55,12 @@ public static class TagService
   {
     if (IsValidRegionTag(tag))
       return true;
+    if (IsValidFactionTag(tag))
+      return true;
     return tag switch
     {
       Tags.ADMIN => true,
+      Tags.ROTLING => true,
       Tags.AFFLICTED => true,
       Tags.BEHOLDEN => true,
       Tags.ENCASED => true,
@@ -90,10 +101,26 @@ public static class TagService
     };
   }
 
+  public static bool IsValidFactionTag(string tag)
+  {
+    return tag switch
+    {
+      Tags.FACTION_NOCTUM => true,
+      Tags.FACTION_CULT => true,
+      _ => false
+    };
+  }
+
   // Get all valid tags
   public static IEnumerable<string> GetAllTags()
   {
     yield return Tags.ADMIN;
+
+    // Faction Tags
+    yield return Tags.FACTION_NOCTUM;
+    yield return Tags.FACTION_CULT;
+
+    yield return Tags.ROTLING;
     yield return Tags.AFFLICTED;
     yield return Tags.BEHOLDEN;
     yield return Tags.ENCASED;
@@ -124,6 +151,7 @@ public static class TagService
     { Tags.RELIC, new[] { BuffService.RelicBuffId } },
     { Tags.SPIRIT_CHOSEN, new[] { BuffService.SpiritChosenBuffId } },
     { Tags.WEREWOLF, new[] { BuffService.WerewolfStatsBuffId } },
+    { Tags.ROTLING, new[] { BuffService.RotlingBuffId } }
   };
 
   public static bool AddPlayerTag(Entity characterEntity, string tag)

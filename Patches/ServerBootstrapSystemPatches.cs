@@ -38,6 +38,7 @@ internal static class ServerBootstrapSystemPatches
         if (exists)
         {
             BuffService.RefreshPlayerBuffs(playerCharacter).Start();
+            TeamService.ResetTeam(playerCharacter);
 
             // if they are wearing the razor hood, we want to apply the hide nameplate buff
             if (EntityManager.HasComponent<Equipment>(playerCharacter))

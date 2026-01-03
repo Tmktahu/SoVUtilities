@@ -46,6 +46,7 @@ internal static class TagCommands
     if (TagService.AddPlayerTag(playerEntity, lowercaseTag))
     {
       BuffService.RefreshPlayerBuffs(playerEntity).Start();
+      TeamService.ResetTeam(playerEntity);
       ctx.Reply($"Added tag '{lowercaseTag}' to character '{playerName}'.");
     }
     else
@@ -83,6 +84,7 @@ internal static class TagCommands
     if (TagService.RemovePlayerTag(playerEntity, lowercaseTag))
     {
       BuffService.RefreshPlayerBuffs(playerEntity).Start();
+      TeamService.ResetTeam(playerEntity);
       ctx.Reply($"Removed tag '{lowercaseTag}' from character '{playerName}'.");
     }
     else

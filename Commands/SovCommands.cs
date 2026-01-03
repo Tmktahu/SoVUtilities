@@ -43,12 +43,6 @@ internal static class SovCommands
   public static void RefreshSelfBuffsCommand(ChatCommandContext ctx)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     BuffService.RefreshPlayerBuffs(playerEntity).Start();
     ctx.Reply("Your buffs have been refreshed.");
   }
@@ -58,12 +52,6 @@ internal static class SovCommands
   public static void RevealNameplateCommand(ChatCommandContext ctx)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     BuffService.RemoveHideNameplateBuff(playerEntity, true);
     ctx.Reply("Your nameplate has been revealed.");
   }
@@ -73,11 +61,6 @@ internal static class SovCommands
   public static void BloodPotionCommand(ChatCommandContext ctx)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
 
     // Check if player has human tag first
     var playerData = PlayerDataService.GetPlayerData(playerEntity);
@@ -114,12 +97,6 @@ internal static class SovCommands
   public static void ListNearbyPlayersWithHideNameplateCommand(ChatCommandContext ctx, float radius = 10f)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     var nearbyPlayers = BuffService.NearbyPlayersHaveHideNameplateBuff(playerEntity, radius);
     if (nearbyPlayers.Count == 0)
     {
@@ -235,12 +212,6 @@ internal static class SovCommands
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
     Entity userEntity = ctx.Event.SenderUserEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     TeleportService.TeleportToMapMarker(playerEntity, userEntity);
     ctx.Reply($"Teleported to your map marker.");
   }
@@ -250,12 +221,6 @@ internal static class SovCommands
   public static void TeleportCommand(ChatCommandContext ctx, float x, float y, float z)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     TeleportService.TeleportToCoordinate(playerEntity, ctx.Event.SenderUserEntity, new float3(x, y, z));
     ctx.Reply($"Teleported to coordinates: {x}, {y}, {z}");
   }
@@ -266,12 +231,6 @@ internal static class SovCommands
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
     Entity userEntity = ctx.Event.SenderUserEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     if (!TryFindPlayer(playerName, out Entity targetPlayerEntity, out Entity targetUserEntity))
     {
       ctx.Reply($"Player '{playerName}' not found.");
@@ -287,12 +246,6 @@ internal static class SovCommands
   public static void TeleportHereCommand(ChatCommandContext ctx, string playerName)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     if (!TryFindPlayer(playerName, out Entity targetPlayerEntity, out Entity targetUserEntity))
     {
       ctx.Reply($"Player '{playerName}' not found.");
@@ -308,12 +261,6 @@ internal static class SovCommands
   public static void CoordsCommand(ChatCommandContext ctx)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     float3 position = Core.EntityManager.GetComponentData<Translation>(playerEntity).Value;
     ctx.Reply($"Your current coordinates are: {position.x}, {position.y}, {position.z}");
   }
@@ -323,12 +270,6 @@ internal static class SovCommands
   public static void RepairCommand(ChatCommandContext ctx, int radius = 10)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     BuildingService.RepairAroundTarget(playerEntity, radius);
     ctx.Reply($"Repaired all buildings around you.");
   }
@@ -434,12 +375,6 @@ internal static class SovCommands
   public static void ToggleHideAdminStatusCommand(ChatCommandContext ctx, string hideStatus = null)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
     var playerData = PlayerDataService.GetPlayerData(playerEntity);
 
     bool hideStatusBool;
@@ -472,50 +407,30 @@ internal static class SovCommands
     ctx.Reply($"Your admin status will now be {(hideStatusBool ? "hidden" : "visible")} in chat.");
   }
 
-  // command to transform into a werewolf
-  [Command("transform werewolf", "Transform into a werewolf", adminOnly: false)]
-  public static void TransformIntoWerewolfCommand(ChatCommandContext ctx)
+  // command to spawn a sequence from sequence GUID onto the player
+  [Command("spawn sequence", "Spawn a sequence onto the player", adminOnly: true)]
+  public static void SpawnSequenceCommand(ChatCommandContext ctx, int sequenceGuid, int lifetime)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
-
-    // check if they have the werewolf tag
-    var playerData = PlayerDataService.GetPlayerData(playerEntity);
-    if (!playerData.HasTag(TagService.Tags.WEREWOLF))
-    {
-      ctx.Reply("You are not a werewolf.");
-      return;
-    }
-
-    // BuffService.AddCustomBuffToPlayer(playerEntity, BuffService.WerewolfBuffId).Start();
-    WerewolfBuff.ApplyCustomBuff(playerEntity).Start();
-
-    ctx.Reply("You have transformed into a werewolf.");
+    Core.SequenceService.Spawn(playerEntity, new SequenceGUID(sequenceGuid), lifetime);
+    ctx.Reply($"Spawned sequence {sequenceGuid} onto you.");
   }
 
-  // command to revert from werewolf form
-  [Command("revert werewolf", "Revert from werewolf form", adminOnly: false)]
-  public static void RevertFromWerewolfCommand(ChatCommandContext ctx)
+  // command to list all sequences on the player
+  [Command("list sequences", "List all sequences on the player", adminOnly: true)]
+  public static void ListSequencesCommand(ChatCommandContext ctx)
   {
     Entity playerEntity = ctx.Event.SenderCharacterEntity;
-    if (playerEntity == null)
-    {
-      ctx.Reply("You are not a valid player. TELL VLUUR IN DISCORD IMMEDIATELY!");
-      return;
-    }
+    Core.SequenceService.ListActiveSequences(playerEntity);
+    ctx.Reply($"Listed active sequences for you in the server log.");
+  }
 
-    if (!WerewolfBuff.HasBuff(playerEntity))
-    {
-      ctx.Reply("You are not in werewolf form.");
-      return;
-    }
-
-    WerewolfBuff.RemoveBuff(playerEntity);
-
-    ctx.Reply("You have reverted from werewolf form.");
+  // command to despawn a sequence from sequence GUID from the player
+  [Command("despawn sequence", "Despawn a sequence from the player", adminOnly: true)]
+  public static void DespawnSequenceCommand(ChatCommandContext ctx, int sequenceGuid)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    Core.SequenceService.Despawn(playerEntity, new SequenceGUID(sequenceGuid));
+    ctx.Reply($"Despawned sequence {sequenceGuid} from you.");
   }
 }

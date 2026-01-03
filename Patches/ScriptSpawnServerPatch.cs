@@ -52,6 +52,8 @@ internal static class ScriptSpawnServerPatch
     ShapeshiftHumanSkin02Buff
   };
 
+
+
   [HarmonyPatch(typeof(ScriptSpawnServer), nameof(ScriptSpawnServer.OnUpdate))]
   [HarmonyPrefix]
   static void OnUpdatePrefix(ScriptSpawnServer __instance)
@@ -76,10 +78,10 @@ internal static class ScriptSpawnServerPatch
 
         if (targetIsPlayer)
         {
-          Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
+          // Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
           var playerData = PlayerDataService.GetPlayerData(buffTarget);
 
-          if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Buff))
+          if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Buff) || prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Skin01_Buff))
           {
             // check if they have the werewolf tag
             if (playerData.HasTag(TagService.Tags.WEREWOLF))
@@ -87,7 +89,24 @@ internal static class ScriptSpawnServerPatch
               entities[i].Destroy();
               WerewolfBuff.ApplyCustomBuff(buffTarget).Start();
               WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
+              // AbilityService.RefreshAbilities(buffTarget).Start();
               continue;
+            }
+          }
+
+          if (AbilityService.combatShapeshiftForms.Contains(prefabGuid))
+          {
+            EntityManager.TryGetBuffer<GameplayEventListeners>(entities[i], out var gameplayEventListenersBuffer);
+            if (gameplayEventListenersBuffer.Length > 0)
+            {
+              for (int j = 0; j < gameplayEventListenersBuffer.Length; j++)
+              {
+                if (gameplayEventListenersBuffer[j].GameplayEventType == GameplayEventTypeEnum.Destroy)
+                {
+                  gameplayEventListenersBuffer.RemoveAt(j);
+                  j--; // Adjust index after removal
+                }
+              }
             }
           }
 
@@ -106,46 +125,7 @@ internal static class ScriptSpawnServerPatch
             {
               WerewolfBuff.RemoveBuff(buffTarget);
               WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
-            }
-          }
-
-          if (prefabGuid.Equals(PrefabGUIDs.SpellPassive_Storm_T03_HungerForPower))
-          {
-            if (EntityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entities[i], out var modifyStatBuffer))
-            {
-              for (int j = 0; j < modifyStatBuffer.Length; j++)
-              {
-                Core.Log.LogInfo($"Modifying entry {j} in ModifyUnitStatBuff_DOTS buffer.");
-                // AttributeCapType attributeCapType = modifyStatBuffer[j].AttributeCapType;
-                UnitStatType statType = modifyStatBuffer[j].StatType;
-                // ModificationType modificationType = modifyStatBuffer[j].ModificationType;
-                // float value = modifyStatBuffer[j].Value;
-                // float softCapValue = modifyStatBuffer[j].SoftCapValue;
-                // float modifier = modifyStatBuffer[j].Modifier;
-                // bool increaseByStacks = modifyStatBuffer[j].IncreaseByStacks;
-                // float valueByStacks = modifyStatBuffer[j].ValueByStacks;
-                // int priority = modifyStatBuffer[i].Priority;
-                // Core.Log.LogInfo($"Before: AttributeCapType={attributeCapType}, StatType={statType}, ModificationType={modificationType}, Value={value}, SoftCapValue={softCapValue}, Modifier={modifier}, IncreaseByStacks={increaseByStacks}, ValueByStacks={valueByStacks}, Priority={priority}");
-
-                // if (statType == UnitStatType.SpellLifeLeech)
-                // {
-                //   modifyStatBuffer[i] = new ModifyUnitStatBuff_DOTS
-                //   {
-                //     AttributeCapType = modifyStatBuffer[i].AttributeCapType,
-                //     StatType = modifyStatBuffer[i].StatType,
-                //     ModificationType = modifyStatBuffer[i].ModificationType,
-                //     Value = 2f, // change to flat 2.0 increase
-                //     SoftCapValue = modifyStatBuffer[i].SoftCapValue,
-                //     Modifier = modifyStatBuffer[i].Modifier,
-                //     IncreaseByStacks = modifyStatBuffer[i].IncreaseByStacks,
-                //     ValueByStacks = modifyStatBuffer[i].ValueByStacks,
-                //     Priority = modifyStatBuffer[i].Priority,
-                //     Id = modifyStatBuffer[i].Id
-                //   };
-                // }
-
-                modifyStatBuffer.Clear();
-              }
+              AbilityService.RefreshEquipBuff(buffTarget).Start();
             }
           }
 

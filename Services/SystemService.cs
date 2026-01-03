@@ -122,6 +122,8 @@ internal class SystemService(World world)
   public SystemMessageSystem SystemMessageSystem => _systemMessageSystem ??= GetSystem<SystemMessageSystem>();
   SetMapMarkerSystem _setMapMarkerSystem;
   public SetMapMarkerSystem SetMapMarkerSystem => _setMapMarkerSystem ??= GetSystem<SetMapMarkerSystem>();
+  FactionLookupSystem _factionLookupSystem;
+  public FactionLookupSystem FactionLookupSystem => _factionLookupSystem ??= GetSystem<FactionLookupSystem>();
 
   NetworkIdSystem.Singleton _networkIdSystem_Singleton;
   public NetworkIdSystem.Singleton NetworkIdSystem

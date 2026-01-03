@@ -121,20 +121,33 @@ internal static class WerewolfStatsBuff
           Id = Core.ModificationIdGenerator.NewModificationId()
         };
         buffer.Add(speedBuff);
+
+        ModifyUnitStatBuff_DOTS attackSpeedBuff = new ModifyUnitStatBuff_DOTS
+        {
+          StatType = UnitStatType.AbilityAttackSpeed,
+          ModificationType = ModificationType.Multiply,
+          AttributeCapType = AttributeCapType.Uncapped,
+          Value = 1.25f,
+          Modifier = 1,
+          IncreaseByStacks = false,
+          ValueByStacks = 0,
+          Priority = 0,
+          Id = Core.ModificationIdGenerator.NewModificationId()
+        };
+        buffer.Add(attackSpeedBuff);
       }
       else if (BuffService.HasBuff(targetEntity, wolfFormPrefabGUID) || BuffService.HasBuff(targetEntity, wolfFormSkin1PrefabGUID) || BuffService.HasBuff(targetEntity, wolfFormSkin2PrefabGUID) || BuffService.HasBuff(targetEntity, wolfFormSkin3PrefabGUID))
       {
-        // movement speed +20%
-        ModifyUnitStatBuff_DOTS speedBuff = new ModifyUnitStatBuff_DOTS
-        {
-          StatType = UnitStatType.BonusShapeshiftMovementSpeed,
-          ModificationType = ModificationType.Set,
-          AttributeCapType = AttributeCapType.Uncapped,
-          Value = 0.78f, // this gets it to horse target of 11.6 speed
-          Modifier = 1,
-          Id = Core.ModificationIdGenerator.NewModificationId()
-        };
-        buffer.Add(speedBuff);
+        // ModifyUnitStatBuff_DOTS speedBuff = new ModifyUnitStatBuff_DOTS
+        // {
+        //   StatType = UnitStatType.BonusShapeshiftMovementSpeed,
+        //   ModificationType = ModificationType.Set,
+        //   AttributeCapType = AttributeCapType.Uncapped,
+        //   Value = 0.78f, // this gets it to horse target of 11.6 speed
+        //   Modifier = 1,
+        //   Id = Core.ModificationIdGenerator.NewModificationId()
+        // };
+        // buffer.Add(speedBuff);
       }
       else
       {
