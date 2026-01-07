@@ -224,7 +224,7 @@ public static class AbilityService
   {
     PrefabGUIDs.AB_Vermin_Rat_MeleeAttack_AbilityGroup._Value, // Primary auto attack slot
     PrefabGUIDs.AB_Vermin_DireRat_Gnaw_AbilityGroup._Value, // Secondary Q slot
-    0, // Travel slot, spacebar
+    -1, // Travel slot, spacebar
     0, // shift slot
     PrefabGUIDs.AB_Shapeshift_Spider_Burrow_AbilityGroup._Value, // Power slot E
     -1, // first spell slot R, clear it completely
@@ -246,14 +246,26 @@ public static class AbilityService
 
   public static readonly int[] BatFormAbilitySlotPrefabGUIDs = new int[]
   {
-    PrefabGUIDs.AB_BatSwarm_Melee_AbilityGroup._Value,
-    0,
-    0,
-    0,
-    PrefabGUIDs.AB_Dracula_ShadowBatSwarm_Dash_AbilityGroup._Value,
-    0,
-    0,
-    0
+    PrefabGUIDs.AB_BatSwarm_Melee_AbilityGroup._Value, // Primary auto attack slot
+    0, // Secondary Q slot
+    0, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Dracula_ShadowBatSwarm_Dash_AbilityGroup._Value, // Power slot E
+    0, // first spell slot R
+    0, // second spell slot C
+    0 // ultimate slot t
+  };
+
+  public static readonly int[] BearFormAbilitySlotPrefabGUIDs = new int[]
+  {
+    0, // Primary auto attack slot
+    0, // Secondary Q slot
+    PrefabGUIDs.AB_Shapeshift_Bear_Dash_Group._Value, // Travel slot, spacebar
+    0, // shift slot
+    PrefabGUIDs.AB_Bear_Dire_AreaAttack_AbilityGroup._Value, // Power slot E
+    PrefabGUIDs.AB_Bear_FallAsleep_Group._Value, // first spell slot R
+    PrefabGUIDs.AB_Bear_WakeUp_Group._Value, // second spell slot C
+    0 // ultimate slot t
   };
 
   public static void setAbility(Entity playerEntity, AbilityTypeEnum targetSlot, PrefabGUID abilityPrefab, string currentWeaponCategory)
@@ -321,11 +333,53 @@ public static class AbilityService
     PlayerDataService.SaveData();
   }
 
+  public static void SetItemAbility(Entity itemEntity, AbilityTypeEnum targetSlot, PrefabGUID abilityPrefab)
+  {
+    // Get item data
+    var itemData = ItemDataService.GetItemData(itemEntity);
+
+    itemData.AbilityGUIDs[(int)targetSlot] = abilityPrefab.GuidHash;
+    ItemDataService.SaveData();
+  }
+
+  public static void ClearItemAbility(Entity itemEntity, AbilityTypeEnum targetSlot)
+  {
+    // Get item data
+    var itemData = ItemDataService.GetItemData(itemEntity);
+
+    itemData.AbilityGUIDs[(int)targetSlot] = 0; // 0 means empty
+    ItemDataService.SaveData();
+  }
+
+  public static void ClearAllItemAbilities(Entity itemEntity)
+  {
+    var itemData = ItemDataService.GetItemData(itemEntity);
+
+    for (int i = 0; i < 8; i++)
+    {
+      itemData.AbilityGUIDs[i] = 0; // 0 means empty
+    }
+    ItemDataService.SaveData();
+  }
+
   public static void ApplyAbilities(Entity playerEntity, Entity buffEntity, int[] abilitySlotPrefabGUIDs, int groupPriority = 1)
   {
     // first we want to get the abilities for the associated player
     if (abilitySlotPrefabGUIDs != null)
     {
+      var buffer = EntityManager.GetBuffer<ReplaceAbilityOnSlotBuff>(buffEntity);
+      // we want to loop over the buff and see if there are any abilities with a priority of 99
+      // if there are, we change the priority to 11
+      for (int i = 0; i < buffer.Length; i++)
+      {
+        var existingBuff = buffer[i];
+        if (existingBuff.Priority == 99)
+        {
+          existingBuff.Priority = 8;
+          buffer[i] = existingBuff;
+        }
+      }
+
       for (int i = 0; i < abilitySlotPrefabGUIDs.Length; i++)
       {
         if (abilitySlotPrefabGUIDs[i] == 0) continue; // 0 means skip

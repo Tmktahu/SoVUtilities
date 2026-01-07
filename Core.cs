@@ -52,6 +52,8 @@ internal static class Core
 
     // Initialize mod data service
     ModDataService.Initialize();
+    // Initialize item data service
+    ItemDataService.Initialize();
 
     PrefabService prefabService = new PrefabService();
     prefabService.ModifyPrefabs();

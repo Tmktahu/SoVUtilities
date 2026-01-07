@@ -15,8 +15,8 @@ namespace SoVUtilities.Commands;
 internal static class TagCommands
 {
 
-  [Command("tag add", "Add a tag to the target player", adminOnly: true)]
-  public static void AddTagCommand(ChatCommandContext ctx, string tag, string playerName)
+  [Command("tag add", "ta", "Add a tag to the target player", adminOnly: true)]
+  public static void AddTagCommand(ChatCommandContext ctx, string tag, string playerName = null)
   {
     Entity playerEntity;
     Entity userEntity;
@@ -37,25 +37,32 @@ internal static class TagCommands
       }
     }
 
-    if (TagService.IsValidTag(lowercaseTag) == false)
+    var matchedTags = TagService.MatchTag(lowercaseTag);
+    if (matchedTags.Length == 0)
     {
       ctx.Reply($"Invalid tag '{lowercaseTag}'.");
       return;
     }
 
-    if (TagService.AddPlayerTag(playerEntity, lowercaseTag))
+    if (matchedTags.Length > 1)
+    {
+      ctx.Reply($"Ambiguous tag '{lowercaseTag}'. Did you mean: {string.Join(", ", matchedTags)}?");
+      return;
+    }
+
+    if (TagService.AddPlayerTag(playerEntity, matchedTags[0]))
     {
       BuffService.RefreshPlayerBuffs(playerEntity).Start();
       TeamService.ResetTeam(playerEntity);
-      ctx.Reply($"Added tag '{lowercaseTag}' to character '{playerName}'.");
+      ctx.Reply($"Added tag '{matchedTags[0]}' to character '{playerName}'.");
     }
     else
     {
-      ctx.Reply($"Character '{playerName}' already has the tag '{lowercaseTag}'.");
+      ctx.Reply($"Character '{playerName}' already has the tag '{matchedTags[0]}'.");
     }
   }
 
-  [Command("tag remove", "Remove a tag from the target player", adminOnly: true)]
+  [Command("tag remove", "tr", "Remove a tag from the target player", adminOnly: true)]
   public static void RemoveTagCommand(ChatCommandContext ctx, string tag, string playerName = null)
   {
     Entity playerEntity;
@@ -65,6 +72,7 @@ internal static class TagCommands
     if (string.IsNullOrEmpty(playerName))
     {
       playerEntity = ctx.Event.SenderCharacterEntity;
+      playerName = playerEntity.GetUser().CharacterName.ToString();
     }
     else
     {
@@ -75,25 +83,32 @@ internal static class TagCommands
       }
     }
 
-    if (TagService.IsValidTag(lowercaseTag) == false)
+    var matchedTags = TagService.MatchTag(lowercaseTag);
+    if (matchedTags.Length == 0)
     {
       ctx.Reply($"Invalid tag '{lowercaseTag}'.");
       return;
     }
 
-    if (TagService.RemovePlayerTag(playerEntity, lowercaseTag))
+    if (matchedTags.Length > 1)
+    {
+      ctx.Reply($"Ambiguous tag '{lowercaseTag}'. Did you mean: {string.Join(", ", matchedTags)}?");
+      return;
+    }
+
+    if (TagService.RemovePlayerTag(playerEntity, matchedTags[0]))
     {
       BuffService.RefreshPlayerBuffs(playerEntity).Start();
       TeamService.ResetTeam(playerEntity);
-      ctx.Reply($"Removed tag '{lowercaseTag}' from character '{playerName}'.");
+      ctx.Reply($"Removed tag '{matchedTags[0]}' from character '{playerName}'.");
     }
     else
     {
-      ctx.Reply($"Character '{playerName}' does not have the tag '{lowercaseTag}'.");
+      ctx.Reply($"Character '{playerName}' does not have the tag '{matchedTags[0]}'.");
     }
   }
 
-  [Command("tag list", "List all tags of the target player", adminOnly: true)]
+  [Command("tag list", "tl", "List all tags of the target player", adminOnly: true)]
   public static void ListTagsCommand(ChatCommandContext ctx, string playerName = null)
   {
     Entity playerEntity;
@@ -146,7 +161,7 @@ internal static class TagCommands
   }
 
   // command that lists all valid tags
-  [Command("tag listvalid", "List all valid tags in the system", adminOnly: true)]
+  [Command("tag listvalid", "tv", "List all valid tags in the system", adminOnly: true)]
   public static void ListAllTagsCommand(ChatCommandContext ctx)
   {
     string[] allTags = TagService.GetAllTags().ToArray();

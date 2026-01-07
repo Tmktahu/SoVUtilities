@@ -37,6 +37,8 @@ internal static class BuffService
   public static string WerewolfStatsBuffId = "werewolf_stats_buff";
   public static string RotlingBuffId = "rotling_buff";
   public static string WolfSpeedBuffId = "wolf_speed_buff";
+  public static string FaeBuffId = "fae_buff";
+  public static string DaemonBuffId = "daemon_buff";
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
     // { GlobalStatsBuffId, new GlobalStatsCustomBuff() },
@@ -50,7 +52,9 @@ internal static class BuffService
     { RelicBuffId, new RelicCustomBuff() },
     { SpiritChosenBuffId, new SpiritChosenCustomBuff() },
     { WerewolfStatsBuffId, new WerewolfStatsCustomBuff() },
-    { RotlingBuffId, new RotlingCustomBuff() }
+    { RotlingBuffId, new RotlingCustomBuff() },
+    { FaeBuffId, new FaeCustomBuff() },
+    { DaemonBuffId, new DaemonCustomBuff() }
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)
@@ -302,37 +306,5 @@ internal static class BuffService
       ApplyBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_Landing_Travel_End);
       RemoveBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff);
     }
-  }
-
-  public static void UpdateGlobalStatBuff(Entity characterEntity, int gearscoreBonus)
-  {
-    // if (TryGetBuff(characterEntity, globalStatsBuff, out Entity buffEntity))
-    // {
-    //   if (buffEntity.TryGetComponent<ArmorLevel>(out var armorLevelComp))
-    //   {
-    //     if (armorLevelComp.Level == gearscoreBonus)
-    //       return; // no change needed
-
-    //     Core.Log.LogInfo($"BuffService: Updating global stat buff ArmorLevel to {gearscoreBonus} for character entity {characterEntity.Index}.");
-    //     armorLevelComp.Level = gearscoreBonus;
-    //     EntityManager.SetComponentData(buffEntity, armorLevelComp);
-    //   }
-    //   else
-    //   {
-    //     Core.Log.LogInfo($"BuffService: Adding ArmorLevel component with level {gearscoreBonus} to global stat buff for character entity {characterEntity.Index}.");
-    //     // we add the component if it doesn't exist
-    //     ArmorLevel armorLevelCompNew = new ArmorLevel
-    //     {
-    //       Level = gearscoreBonus,
-    //       ModificationId = Core.ModificationIdGenerator.NewModificationId()
-    //     };
-
-    //     EntityManager.AddComponentData(buffEntity, armorLevelCompNew);
-    //   }
-    // }
-    // else
-    // {
-    //   Core.Log.LogInfo($"BuffService: Buff entity for global stats buff not found on character entity {characterEntity.Index}.");
-    // }
   }
 }

@@ -180,7 +180,7 @@ public static class EntityService
 
   public static void ResetAggro(Entity entity, Entity targetEntity)
   {
-    if (EntityManager.HasComponent<AggroConsumer>(entity))
+    if (EntityManager.HasComponent<AggroConsumer>(entity) && EntityManager.HasComponent<AggroBuffer>(entity))
     {
       if (EntityManager.TryGetBuffer<AggroBuffer>(entity, out var aggroBuffer))
       {

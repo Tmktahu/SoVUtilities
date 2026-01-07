@@ -48,7 +48,7 @@ public class TeamService
 
       // Reset the faction index
       int originalFactionIndex = GetFactionIndexByPrefabGUID(originalFactionPrefabGuid);
-      Core.Log.LogInfo($"Resetting faction for entity {targetEntity} to original faction index {originalFactionIndex} ({originalFactionPrefabGuid})");
+      // Core.Log.LogInfo($"Resetting faction for entity {targetEntity} to original faction index {originalFactionIndex} ({originalFactionPrefabGuid})");
       SetFactionIndex(targetEntity, originalFactionIndex);
       EntityService.ResetNearbyAggro(targetEntity);
     }
@@ -79,8 +79,10 @@ public class TeamService
     if (EntityManager.HasComponent<Team>(entity))
     {
       var team = EntityManager.GetComponentData<Team>(entity);
+      if (team.FactionIndex == factionIndex)
+        return;
       team.FactionIndex = factionIndex;
-      Core.Log.LogInfo($"Setting faction index for entity {entity} to {factionIndex}");
+      // Core.Log.LogInfo($"Setting faction index for entity {entity} to {factionIndex}");
       EntityManager.SetComponentData(entity, team);
     }
     else

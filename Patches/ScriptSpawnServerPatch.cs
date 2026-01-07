@@ -96,52 +96,54 @@ internal static class ScriptSpawnServerPatch
 
           if (AbilityService.combatShapeshiftForms.Contains(prefabGuid))
           {
-            EntityManager.TryGetBuffer<GameplayEventListeners>(entities[i], out var gameplayEventListenersBuffer);
-            if (gameplayEventListenersBuffer.Length > 0)
+            if (EntityManager.TryGetBuffer<GameplayEventListeners>(entities[i], out var gameplayEventListenersBuffer))
             {
-              for (int j = 0; j < gameplayEventListenersBuffer.Length; j++)
+              if (gameplayEventListenersBuffer.Length > 0)
               {
-                if (gameplayEventListenersBuffer[j].GameplayEventType == GameplayEventTypeEnum.Destroy)
+                for (int j = 0; j < gameplayEventListenersBuffer.Length; j++)
                 {
-                  gameplayEventListenersBuffer.RemoveAt(j);
-                  j--; // Adjust index after removal
+                  if (gameplayEventListenersBuffer[j].GameplayEventType == GameplayEventTypeEnum.Destroy)
+                  {
+                    gameplayEventListenersBuffer.RemoveAt(j);
+                    j--; // Adjust index after removal
+                  }
                 }
               }
             }
-          }
 
-          if (prefabGuid.Equals(HorseMountBuff) || prefabGuid.Equals(VampireHorseMountBuff) || prefabGuid.Equals(VampireBlackfangHorseMountBuff) || prefabGuid.Equals(VampirePMKSkeletonHorseMountBuff))
-          {
-            if (playerData.HasTag(TagService.Tags.WEREWOLF))
+            if (prefabGuid.Equals(HorseMountBuff) || prefabGuid.Equals(VampireHorseMountBuff) || prefabGuid.Equals(VampireBlackfangHorseMountBuff) || prefabGuid.Equals(VampirePMKSkeletonHorseMountBuff))
             {
-              entities[i].Destroy();
-              continue;
+              if (playerData.HasTag(TagService.Tags.WEREWOLF))
+              {
+                entities[i].Destroy();
+                continue;
+              }
             }
-          }
 
-          if (prefabGuid.Equals(ShapeshiftWolfSkinBuff) || prefabGuid.Equals(ShapeshiftWolfSkin01Buff) || prefabGuid.Equals(ShapeshiftWolfSkin02Buff) || prefabGuid.Equals(ShapeshiftWolfSkin03Buff))
-          {
-            if (playerData.HasTag(TagService.Tags.WEREWOLF))
+            if (prefabGuid.Equals(ShapeshiftWolfSkinBuff) || prefabGuid.Equals(ShapeshiftWolfSkin01Buff) || prefabGuid.Equals(ShapeshiftWolfSkin02Buff) || prefabGuid.Equals(ShapeshiftWolfSkin03Buff))
             {
-              WerewolfBuff.RemoveBuff(buffTarget);
-              WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
-              AbilityService.RefreshEquipBuff(buffTarget).Start();
+              if (playerData.HasTag(TagService.Tags.WEREWOLF))
+              {
+                WerewolfBuff.RemoveBuff(buffTarget);
+                WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
+                AbilityService.RefreshEquipBuff(buffTarget).Start();
+              }
             }
-          }
 
-          bool shouldNameplateBeDisabled = false;
-          foreach (PrefabGUID disabledForm in nameplateDisabledForms)
-          {
-            if (prefabGuid.Equals(disabledForm))
+            bool shouldNameplateBeDisabled = false;
+            foreach (PrefabGUID disabledForm in nameplateDisabledForms)
             {
-              shouldNameplateBeDisabled = true;
-              break;
+              if (prefabGuid.Equals(disabledForm))
+              {
+                shouldNameplateBeDisabled = true;
+                break;
+              }
             }
-          }
 
-          if (shouldNameplateBeDisabled)
-          {
-            AddHideNameplateBuff(buffTarget);
+            if (shouldNameplateBeDisabled)
+            {
+              AddHideNameplateBuff(buffTarget);
+            }
           }
         }
       }

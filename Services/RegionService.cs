@@ -114,83 +114,83 @@ internal class RegionService
     if (Core.PlayerService == null)
       return;
 
+    if (!userEntity.Has<User>()) return;
+    var charName = userEntity.Read<User>().CharacterName.ToString();
+    if (string.IsNullOrEmpty(charName)) return;
+
+    var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
+    var playerData = PlayerDataService.GetPlayerData(charEntity);
+
+    if (!charEntity.Has<Equipment>()) return;
+
+    var pos = charEntity.Read<Translation>().Value;
+    WorldRegionType currentWorldRegion = GetRegion(pos);
+    string regionTag = RegionTypeToTag[currentWorldRegion];
+
+    // Track last known region for this player
+    WorldRegionType lastRegion = WorldRegionType.None;
+    _playerLastRegion.TryGetValue(charEntity, out lastRegion);
+
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+
     if (_forceUpdateAllPlayers)
     {
-      // Remove and re-apply buffs for all players
-      // foreach (var userEntity in )
-      // {
-      if (!userEntity.Has<User>()) return;
-      var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
-      if (!charEntity.Has<Equipment>()) return;
-      var pos = charEntity.Read<Translation>().Value;
-      WorldRegionType currentWorldRegion = GetRegion(pos);
-
       // Remove all region buffs
-      var regionBuffs = ModDataService.GetRegionBuffMapping();
       foreach (var kvp in regionBuffs)
       {
         RemoveRegionBuffs(charEntity, kvp.Value.BuffIds);
       }
 
-      // Apply buffs for current region if enabled
-      if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig buffConfig) && buffConfig.Enabled)
+      // Core.Log.LogInfo($"[ForceUpdate] Player {charEntity.Index} in region {currentWorldRegion}, tag {regionTag}.");
+      if (!playerData.HasTag(regionTag))
       {
-        ApplyRegionBuffs(charEntity, buffConfig.BuffIds);
+        // Apply buffs for current region if enabled
+        if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig buffConfig) && buffConfig.Enabled)
+        {
+          ApplyRegionBuffs(charEntity, buffConfig.BuffIds);
+        }
       }
-
-      // Update last known region
-      _playerLastRegion[charEntity] = currentWorldRegion;
-
-      // _forceUpdateAllPlayers = false;
     }
     else
     {
-      // foreach (var userEntity in Core.PlayerService.GetCachedUsersOnline())
-      // {
-      if (!userEntity.Has<User>()) return;
-      var charName = userEntity.Read<User>().CharacterName.ToString();
-      if (string.IsNullOrEmpty(charName)) return;
+      // Detect region change
+      bool regionChanged = lastRegion != currentWorldRegion;
 
-      var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
-      if (!charEntity.Has<Equipment>()) return;
-      var pos = charEntity.Read<Translation>().Value;
-      WorldRegionType currentWorldRegion = GetRegion(pos);
-
-      // Track last known region for this player
-      WorldRegionType lastRegion = WorldRegionType.None;
-      _playerLastRegion.TryGetValue(charEntity, out lastRegion);
-
-      // Only act if region changed
-      if (lastRegion != currentWorldRegion)
+      // Remove buffs from previous region if region changed and lastRegion is valid
+      if (regionChanged && lastRegion != WorldRegionType.None)
       {
-        // Remove buffs from previous region if any
-        if (lastRegion != WorldRegionType.None)
+        if (regionBuffs.TryGetValue((int)lastRegion, out RegionBuffConfig prevBuffConfig))
         {
-          var regionBuffs = ModDataService.GetRegionBuffMapping();
-          if (regionBuffs.TryGetValue((int)lastRegion, out RegionBuffConfig prevBuffConfig))
-          {
-            RemoveRegionBuffs(charEntity, prevBuffConfig.BuffIds);
-          }
+          RemoveRegionBuffs(charEntity, prevBuffConfig.BuffIds);
+          // Core.Log.LogInfo($"Player {charName} exited region {lastRegion}, removed buffs.");
         }
+      }
 
-        // Apply buffs for new region if any
+      if (playerData.HasTag(regionTag))
+      {
+        // If player has the region tag, always remove buffs for current region
+        if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig currentBuffConfig))
+        {
+          RemoveRegionBuffs(charEntity, currentBuffConfig.BuffIds);
+          // Core.Log.LogInfo($"Player {charName} has tag {regionTag}, removed buffs for region {currentWorldRegion}.");
+        }
+      }
+      else
+      {
+        // If player does not have the tag, apply buffs for current region if enabled
         if (currentWorldRegion != WorldRegionType.None)
         {
-          var regionBuffs = ModDataService.GetRegionBuffMapping();
-          if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig newBuffConfig))
+          if (regionBuffs.TryGetValue((int)currentWorldRegion, out RegionBuffConfig newBuffConfig) && newBuffConfig.Enabled)
           {
-            if (newBuffConfig.Enabled)
-            {
-              ApplyRegionBuffs(charEntity, newBuffConfig.BuffIds);
-            }
+            ApplyRegionBuffs(charEntity, newBuffConfig.BuffIds);
+            // Core.Log.LogInfo($"Player {charName} entered region {currentWorldRegion}, received buffs.");
           }
         }
-
-        // Update last known region
-        _playerLastRegion[charEntity] = currentWorldRegion;
       }
-      // }
     }
+
+    // Update last known region
+    _playerLastRegion[charEntity] = currentWorldRegion;
   }
 
   void ApplyRegionBuffs(Entity characterEntity, List<int> buffIds)
@@ -264,6 +264,17 @@ internal class RegionService
     {
       buffConfig.Enabled = false;
       ModDataService.SetRegionBuffConfig((int)region, buffConfig);
+      ForceUpdateAllPlayers();
+    }
+  }
+
+  public void ClearBuffsFromRegion(WorldRegionType region)
+  {
+    var regionBuffs = ModDataService.GetRegionBuffMapping();
+    if (regionBuffs.ContainsKey((int)region))
+    {
+      regionBuffs.Remove((int)region);
+      ModDataService.RemoveRegionBuffConfig((int)region);
       ForceUpdateAllPlayers();
     }
   }

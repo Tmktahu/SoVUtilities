@@ -127,3 +127,19 @@ public class WolfSpeedCustomBuff : ICustomBuff
   public bool HasBuff(Entity entity) => WolfSpeedBuff.HasBuff(entity);
   public string BuffId => BuffService.WolfSpeedBuffId;
 }
+
+public class FaeCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity, GlobalStatBuffFlags[] flags = null) => FaeBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => FaeBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => FaeBuff.HasBuff(entity);
+  public string BuffId => BuffService.FaeBuffId;
+}
+
+public class DaemonCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity, GlobalStatBuffFlags[] flags = null) => DaemonBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => DaemonBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => DaemonBuff.HasBuff(entity);
+  public string BuffId => BuffService.DaemonBuffId;
+}

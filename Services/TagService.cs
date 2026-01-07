@@ -48,6 +48,8 @@ public static class TagService
     public const string RELIC = "relic";
     public const string SPIRIT_CHOSEN = "spiritchosen";
     public const string WEREWOLF = "werewolf";
+    public const string FAE = "fae";
+    public const string DAEMON = "daemon";
   }
 
   // Check if a tag is valid
@@ -76,6 +78,8 @@ public static class TagService
       Tags.RELIC => true,
       Tags.SPIRIT_CHOSEN => true,
       Tags.WEREWOLF => true,
+      Tags.FAE => true,
+      Tags.DAEMON => true,
       _ => false
     };
   }
@@ -136,6 +140,43 @@ public static class TagService
     yield return Tags.RELIC;
     yield return Tags.SPIRIT_CHOSEN;
     yield return Tags.WEREWOLF;
+    yield return Tags.FAE;
+    yield return Tags.DAEMON;
+
+    // Region Tags
+    yield return Tags.CURSED_FOREST;
+    yield return Tags.DUNLEY_FARMLANDS;
+    yield return Tags.FARBANE_WOODS;
+    yield return Tags.GLOOMROT_NORTH;
+    yield return Tags.GLOOMROT_SOUTH;
+    yield return Tags.HALLOWED_MOUNTAINS;
+    yield return Tags.NONE_REGION;
+    yield return Tags.OTHER_REGION;
+    yield return Tags.RUINS_OF_MORTIUM;
+    yield return Tags.SILVERLIGHT_HILLS;
+    yield return Tags.START_CAVE;
+    yield return Tags.OAKVEIL_FOREST;
+
+    // Faction Tags
+    yield return Tags.FACTION_NOCTUM;
+    yield return Tags.FACTION_CULT;
+  }
+
+  // Get all valid region tags
+  public static IEnumerable<string> GetAllRegionTags()
+  {
+    yield return Tags.CURSED_FOREST;
+    yield return Tags.DUNLEY_FARMLANDS;
+    yield return Tags.FARBANE_WOODS;
+    yield return Tags.GLOOMROT_NORTH;
+    yield return Tags.GLOOMROT_SOUTH;
+    yield return Tags.HALLOWED_MOUNTAINS;
+    yield return Tags.NONE_REGION;
+    yield return Tags.OTHER_REGION;
+    yield return Tags.RUINS_OF_MORTIUM;
+    yield return Tags.SILVERLIGHT_HILLS;
+    yield return Tags.START_CAVE;
+    yield return Tags.OAKVEIL_FOREST;
   }
 
   // we need to map tags to buff string IDs array
@@ -151,7 +192,9 @@ public static class TagService
     { Tags.RELIC, new[] { BuffService.RelicBuffId } },
     { Tags.SPIRIT_CHOSEN, new[] { BuffService.SpiritChosenBuffId } },
     { Tags.WEREWOLF, new[] { BuffService.WerewolfStatsBuffId } },
-    { Tags.ROTLING, new[] { BuffService.RotlingBuffId } }
+    { Tags.ROTLING, new[] { BuffService.RotlingBuffId } },
+    { Tags.FAE, new[] { BuffService.FaeBuffId } },
+    { Tags.DAEMON, new[] { BuffService.DaemonBuffId } }
   };
 
   public static bool AddPlayerTag(Entity characterEntity, string tag)
@@ -233,11 +276,36 @@ public static class TagService
     return allTags;
   }
 
-  // public static List<PlayerData> GetPlayersWithTag(string tag)
-  // {
-  //   return _playerData
-  //       .Values
-  //       .Where(data => data.HasTag(tag))
-  //       .ToList();
-  // }
+  public static string[] MatchTag(string input)
+  {
+    // this function will attempt to match the input string to a valid tag
+    // we'll be doing fuzzy matching here
+    // if we find multiple matches, we'll return them all
+    var matches = new List<string>();
+    foreach (var tag in GetAllTags())
+    {
+      // we check to see if the tag includes the input string
+      if (tag.Contains(input, StringComparison.OrdinalIgnoreCase))
+      {
+        matches.Add(tag);
+      }
+    }
+
+    return matches.ToArray();
+  }
+
+  public static string[] MatchRegionTag(string input)
+  {
+    var matches = new List<string>();
+
+    foreach (var tag in GetAllRegionTags())
+    {
+      if (tag.Contains(input, StringComparison.OrdinalIgnoreCase))
+      {
+        matches.Add(tag);
+      }
+    }
+
+    return matches.ToArray();
+  }
 }

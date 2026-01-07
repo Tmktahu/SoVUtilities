@@ -120,33 +120,6 @@ internal class PrefabService
       EntityManager.RemoveComponent<ShapeshiftImpairBuff>(batShapeshiftBuffEntity);
     }
 
-    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Shapeshift_Bat_Land_AbilityGroup, out Entity batShapeshiftLandAbilityEntity))
-    {
-      // it has a AbilityCooldownData component we want to edit
-      if (EntityManager.TryGetBuffer<AbilityGroupStartAbilitiesBuffer>(batShapeshiftLandAbilityEntity, out var abilityGroupStartAbilitiesBuffer))
-      {
-        for (int i = 0; i < abilityGroupStartAbilitiesBuffer.Length; i++)
-        {
-          var ability = abilityGroupStartAbilitiesBuffer[i];
-          if (ability.PrefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Bat_Land_PreCast))
-          {
-            ability.PrefabGUID = PrefabGUIDs.AB_Shapeshift_Bat_Landing_Travel;
-            abilityGroupStartAbilitiesBuffer[i] = ability; // assignment back is required
-          }
-        }
-      }
-
-      // then we get the buffer again and check to see if it was changed
-      if (EntityManager.TryGetBuffer<AbilityGroupStartAbilitiesBuffer>(batShapeshiftLandAbilityEntity, out var verifyAbilityGroupStartAbilitiesBuffer))
-      {
-        for (int i = 0; i < verifyAbilityGroupStartAbilitiesBuffer.Length; i++)
-        {
-          var ability = verifyAbilityGroupStartAbilitiesBuffer[i];
-          Core.Log.LogInfo($"- Bat Land Ability Group Start Ability {i}: {ability.PrefabGUID}");
-        }
-      }
-    }
-
     if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.Buff_General_Shapeshift_Werewolf_Standard, out Entity werewolfShapeshiftBuffEntity))
     {
       if (EntityManager.TryGetComponentData<BuffModificationFlagData>(werewolfShapeshiftBuffEntity, out var buffModificationFlagData))
@@ -185,6 +158,27 @@ internal class PrefabService
       {
         abilityCooldownData.Cooldown._Value = 8f; // no cooldown by default
         EntityManager.SetComponentData(spiderFormWebShootCastEntity, abilityCooldownData);
+      }
+    }
+
+    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Spider_Forest_BackStep_Cast, out Entity spiderFormBackstepCastEntity))
+    {
+      // it has a AbilityCooldownData component we want to edit
+      if (EntityManager.TryGetComponentData<AbilityCooldownData>(spiderFormBackstepCastEntity, out var abilityCooldownData))
+      {
+        abilityCooldownData.Cooldown._Value = 8f; // original is 30f
+        EntityManager.SetComponentData(spiderFormBackstepCastEntity, abilityCooldownData);
+      }
+    }
+
+
+    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Bear_Dire_AreaAttack_Cast, out Entity bearDireAreaAttackCastEntity))
+    {
+      // it has a AbilityCooldownData component we want to edit
+      if (EntityManager.TryGetComponentData<AbilityCooldownData>(bearDireAreaAttackCastEntity, out var abilityCooldownData))
+      {
+        abilityCooldownData.Cooldown._Value = 12f; // original is 5f
+        EntityManager.SetComponentData(bearDireAreaAttackCastEntity, abilityCooldownData);
       }
     }
 

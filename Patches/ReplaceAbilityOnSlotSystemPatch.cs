@@ -51,7 +51,7 @@ internal static class ReplaceAbilityOnSlotSystemPatch
                             prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Wolf_Blackfang_Skin03_Buff))
                         {
                             abilitySlotPrefabGUIDs = AbilityService.WolfFormAbilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 99);
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
 
@@ -59,51 +59,74 @@ internal static class ReplaceAbilityOnSlotSystemPatch
                         {
                             // the man toad form has no tongue
                             abilitySlotPrefabGUIDs = AbilityService.ToadFormAbilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 12);
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
 
                         if (prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Rat_Buff))
                         {
                             abilitySlotPrefabGUIDs = AbilityService.RatFormAbilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 12);
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
 
                         if (prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Spider_Buff))
                         {
                             abilitySlotPrefabGUIDs = AbilityService.SpiderFormAbilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 12);
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
 
-                        if (prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff))
+                        if (prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Buff) ||
+                            prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Skin01_Buff))
                         {
-                            abilitySlotPrefabGUIDs = AbilityService.BatFormAbilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 12);
+                            abilitySlotPrefabGUIDs = AbilityService.BearFormAbilitySlotPrefabGUIDs;
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
+
+                        // if (prefabGUID.Equals(PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff))
+                        // {
+                        //     abilitySlotPrefabGUIDs = AbilityService.BatFormAbilitySlotPrefabGUIDs;
+                        //     AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
+                        //     continue;
+                        // }
 
                         // if they have the werewolf tag and are in werewolf form, we apply the werewolf abilities instead
                         if (playerData.HasTag(TagService.Tags.WEREWOLF) && WerewolfBuff.HasBuff(character))
                         {
                             abilitySlotPrefabGUIDs = WerewolfBuff.abilitySlotPrefabGUIDs;
-                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 10);
+                            AbilityService.ApplyAbilities(character, buffEntity, abilitySlotPrefabGUIDs, 9);
                             continue;
                         }
 
                         if (prefabName.Contains("unarmed", Il2CppSystem.StringComparison.OrdinalIgnoreCase) ||
                             prefabName.Contains("weapon", Il2CppSystem.StringComparison.OrdinalIgnoreCase))
                         {
+                            // item abilities take priority over categorical abilities
+                            // get the player's equipment component
+                            Equipment equipment = EntityManager.GetComponentData<Equipment>(character);
+                            EquipmentSlot weaponSlot = equipment.WeaponSlot;
+                            Entity itemEntity = weaponSlot.SlotEntity._Entity;
+
+                            if (EntityManager.Exists(itemEntity) && ItemDataService.HasItemData(itemEntity))
+                            {
+                                Services.ItemData itemData = ItemDataService.GetItemData(itemEntity);
+                                abilitySlotPrefabGUIDs = itemData.AbilityGUIDs;
+                            }
+
                             // for each category, check if the prefabName contains it
                             // and if so, get the corresponding abilitySlotPrefabGUIDs
-                            foreach (var category in AbilityService.weaponCategories)
+                            if (abilitySlotPrefabGUIDs == null)
                             {
-                                if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase) && abilitySlotPrefabGUIDs == null)
+                                foreach (var category in AbilityService.weaponCategories)
                                 {
-                                    AbilityService.WeaponCategoryToDefaultEquipBuff.TryGetValue(category, out var defaultEquipBuff);
-                                    playerData.AbilitySlotDefinitions.TryGetValue(defaultEquipBuff._Value, out abilitySlotPrefabGUIDs);
-                                    break;
+                                    if (prefabName.Contains(category, Il2CppSystem.StringComparison.OrdinalIgnoreCase) && abilitySlotPrefabGUIDs == null)
+                                    {
+                                        AbilityService.WeaponCategoryToDefaultEquipBuff.TryGetValue(category, out var defaultEquipBuff);
+                                        playerData.AbilitySlotDefinitions.TryGetValue(defaultEquipBuff._Value, out abilitySlotPrefabGUIDs);
+                                        break;
+                                    }
                                 }
                             }
 

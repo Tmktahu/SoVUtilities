@@ -67,7 +67,7 @@ internal static class AbilityCommands
     ctx.Reply($"Cleared E ability slot. Swap weapons to update your UI.");
   }
 
-  [Command("ability set", "Set an ability to a slot", adminOnly: true)]
+  [Command("ability set", "as", "Set an ability to a slot", adminOnly: true)]
   public static void SetAbilityCommand(ChatCommandContext ctx, int placementId, int prefabGuid, string playerName = null)
   {
     if (!AbilityService.PlacementIdToAbilityType.TryGetValue(placementId, out var slot))
@@ -95,7 +95,7 @@ internal static class AbilityCommands
     ctx.Reply($"Set ability slot {slot} to prefab GUID {prefabGuid} for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
   }
 
-  [Command("ability clear", "Clear an ability slot", adminOnly: true)]
+  [Command("ability clear", "ac", "Clear an ability slot", adminOnly: true)]
   public static void ClearAbilitySlotCommand(ChatCommandContext ctx, int placementId, string playerName = null)
   {
     if (!AbilityService.PlacementIdToAbilityType.TryGetValue(placementId, out var slot))
@@ -122,7 +122,7 @@ internal static class AbilityCommands
     ctx.Reply($"Cleared ability slot {slot} for player '{playerName ?? playerEntity.GetUser().CharacterName}'.");
   }
 
-  [Command("ability clearall", "Clear all ability slots", adminOnly: true)]
+  [Command("ability clearall", "ac", "Clear all ability slots", adminOnly: true)]
   public static void ClearAllAbilitySlotsCommand(ChatCommandContext ctx, string playerName = null)
   {
     Entity playerEntity;

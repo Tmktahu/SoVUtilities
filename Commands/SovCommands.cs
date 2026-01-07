@@ -433,4 +433,40 @@ internal static class SovCommands
     Core.SequenceService.Despawn(playerEntity, new SequenceGUID(sequenceGuid));
     ctx.Reply($"Despawned sequence {sequenceGuid} from you.");
   }
+
+  // command to test item stuff
+  [Command("item test", "Test item command", adminOnly: true)]
+  public static void ItemTestCommand(ChatCommandContext ctx)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    ItemService.TestItemFunctionality(playerEntity);
+    ctx.Reply("Tested item functionality. Check server log for details.");
+  }
+
+  // command to make a dice roll
+  [Command("roll", "Roll a dice in NdM format (e.g., 2d6)", adminOnly: false)]
+  public static void RollDiceCommand(ChatCommandContext ctx, string diceNotation)
+  {
+    try
+    {
+      DiceResult diceResult = DiceService.RollDice(diceNotation);
+      if (diceResult.Valid)
+      {
+        int result = diceResult.Result;
+        string details = diceResult.ResultText;
+        // ctx.Reply($"You rolled {diceNotation}: {details}"); we handle display in SendToNearbyPlayers
+
+        DiceService.SendToNearbyPlayers(ctx.Event.SenderCharacterEntity, diceResult);
+        DiceService.SendToDiscord(ctx.Event.SenderCharacterEntity, diceNotation, diceResult);
+      }
+      else
+      {
+        ctx.Reply($"Invalid dice notation '{diceNotation}'. Please use NdM format (e.g., 2d6).");
+      }
+    }
+    catch (Exception ex)
+    {
+      ctx.Reply($"Error rolling dice: {ex.Message}");
+    }
+  }
 }

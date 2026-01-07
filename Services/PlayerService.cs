@@ -18,14 +18,15 @@ public struct PlayerCacheData(FixedString64Bytes characterName = default, ulong 
   public bool IsOnline { get; set; } = isOnline;
   public Entity UserEntity { get; set; } = userEntity;
   public Entity CharEntity { get; set; } = charEntity;
-  public int UnarmedGearScore { get; set; } = -1;
 }
+
 
 internal class PlayerService
 {
   readonly Dictionary<FixedString64Bytes, PlayerCacheData> namePlayerCache = [];
   readonly Dictionary<ulong, PlayerCacheData> steamPlayerCache = [];
   readonly Dictionary<NetworkId, PlayerData> idPlayerCache = [];
+  readonly HashSet<string> playersUnderCorrection = new();
   readonly EntityManager EntityManager = Core.EntityManager;
 
   internal bool TryFindSteam(ulong steamId, out PlayerCacheData playerData)
@@ -99,8 +100,6 @@ internal class PlayerService
         //   }
         // }
 
-        HandlePlayerGearscore(userEntity);
-
         // for regional buffs and whatnot
         if (Core.RegionService != null)
         {
@@ -114,46 +113,6 @@ internal class PlayerService
       }
 
       yield return null;
-    }
-  }
-
-  public void HandlePlayerGearscore(Entity userEntity)
-  {
-    // so this will be called whenever they swap weapons or change gear?
-    // essentially when they flip to unarmed or fishing pole, we want their gearscore to stick
-    // that means we'll need to buff them accordingly
-    var userData = Core.EntityManager.GetComponentData<User>(userEntity);
-    var charEntity = userData.LocalCharacter._Entity;
-
-    // we use our global buff for this
-    if (!charEntity.Equals(Entity.Null))
-    {
-      if (!EntityManager.HasComponent<Equipment>(charEntity))
-        return;
-
-      var equipment = charEntity.Read<Equipment>();
-      string characterName = userData.CharacterName.ToString().ToLower();
-      if (namePlayerCache.TryGetValue(characterName, out var playerCacheData))
-      {
-        if (equipment.WeaponLevel == 0)
-        {
-          // unarmed or fishing pole
-          // in this case we want to update their buff to match their unarmed gearscore
-          int unarmedGearScore = playerCacheData.UnarmedGearScore;
-          if (unarmedGearScore > 0)
-          {
-            // apply buff with unarmed gearscore
-            equipment.WeaponLevel._Value = unarmedGearScore;
-            EntityManager.SetComponentData(charEntity, equipment);
-          }
-        }
-        else
-        {
-          // armed, we want to keep track of their weapon gearscore for later
-          playerCacheData.UnarmedGearScore = (int)Math.Round(equipment.WeaponLevel);
-          namePlayerCache[characterName] = playerCacheData;
-        }
-      }
     }
   }
 
