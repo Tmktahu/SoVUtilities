@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Stunlock.Core;
 using SoVUtilities.Resources;
 using ProjectM.Network;
@@ -118,6 +119,16 @@ internal static class BuffService
 
   public static void AddHideNameplateBuff(Entity entity)
   {
+    var playerData = PlayerDataService.GetPlayerData(entity);
+    if (playerData.DisableHideNameplate)
+    {
+      Entity userEntity = entity.GetUserEntity();
+      User user = EntityManager.GetComponentData<User>(userEntity);
+      FixedString512Bytes message = new FixedString512Bytes("Your nameplate is still visible because your '.sov alwaysreveal' is enabled.");
+      ServerChatUtils.SendSystemMessageToClient(EntityManager, user, ref message);
+      return;
+    }
+
     ApplyBuff(entity, HideNameplateBuffGuid);
 
     if (!TryGetBuff(entity, HideNameplateBuffGuid, out Entity buffEntity))

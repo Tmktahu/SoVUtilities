@@ -7,6 +7,8 @@ using Unity.Entities;
 using static SoVUtilities.Services.BuffService;
 using SoVUtilities.Resources;
 using SoVUtilities.Services.Buffs;
+using ProjectM.Network;
+using Unity.Collections;
 
 namespace SoVUtilities.Patches;
 
@@ -78,7 +80,7 @@ internal static class ScriptSpawnServerPatch
 
         if (targetIsPlayer)
         {
-          // Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
+          Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
           var playerData = PlayerDataService.GetPlayerData(buffTarget);
 
           if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Buff) || prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Skin01_Buff))
@@ -90,6 +92,18 @@ internal static class ScriptSpawnServerPatch
               WerewolfBuff.ApplyCustomBuff(buffTarget).Start();
               WerewolfStatsBuff.ReapplyCustomBuff(buffTarget).Start();
               // AbilityService.RefreshAbilities(buffTarget).Start();
+              continue;
+            }
+          }
+
+          if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff))
+          {
+            if (playerData.HasTag(TagService.Tags.HUMAN) || playerData.HasTag(TagService.Tags.WEREWOLF))
+            {
+              entities[i].Destroy();
+              User user = buffTarget.GetUser();
+              FixedString512Bytes message = new FixedString512Bytes("You are not a vampire or daemon. Doofus.");
+              ServerChatUtils.SendSystemMessageToClient(__instance.EntityManager, user, ref message);
               continue;
             }
           }

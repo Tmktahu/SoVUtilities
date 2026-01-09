@@ -156,10 +156,6 @@ public static class TagService
     yield return Tags.SILVERLIGHT_HILLS;
     yield return Tags.START_CAVE;
     yield return Tags.OAKVEIL_FOREST;
-
-    // Faction Tags
-    yield return Tags.FACTION_NOCTUM;
-    yield return Tags.FACTION_CULT;
   }
 
   // Get all valid region tags

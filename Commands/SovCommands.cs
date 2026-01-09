@@ -407,6 +407,42 @@ internal static class SovCommands
     ctx.Reply($"Your admin status will now be {(hideStatusBool ? "hidden" : "visible")} in chat.");
   }
 
+  // a command to set the always reveal nameplate flag
+  [Command("alwaysreveal", "Toggle always revealing your nameplate (bypasses Razer Hood)", adminOnly: false)]
+  public static void ToggleAlwaysRevealCommand(ChatCommandContext ctx, string revealStatus = null)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    var playerData = PlayerDataService.GetPlayerData(playerEntity);
+
+    bool revealStatusBool;
+    if (string.Equals(revealStatus, "true", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(revealStatus, "yes", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(revealStatus, "1", StringComparison.OrdinalIgnoreCase))
+    {
+      revealStatusBool = true;
+    }
+    else if (string.Equals(revealStatus, "false", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(revealStatus, "no", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(revealStatus, "0", StringComparison.OrdinalIgnoreCase))
+    {
+      revealStatusBool = false;
+    }
+    else if (string.IsNullOrEmpty(revealStatus))
+    {
+      revealStatusBool = !playerData.DisableHideNameplate;
+    }
+    else
+    {
+      ctx.Reply("Invalid argument. Use 'true', 'false', or leave empty to toggle.");
+      return;
+    }
+
+    playerData.DisableHideNameplate = revealStatusBool;
+    PlayerDataService.SaveData();
+
+    ctx.Reply($"Your nameplate will now {(revealStatusBool ? "always be visible" : "follow normal hiding rules")}.");
+  }
+
   // command to spawn a sequence from sequence GUID onto the player
   [Command("spawn sequence", "Spawn a sequence onto the player", adminOnly: true)]
   public static void SpawnSequenceCommand(ChatCommandContext ctx, int sequenceGuid, int lifetime)
