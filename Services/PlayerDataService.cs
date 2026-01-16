@@ -1,6 +1,8 @@
 using System.Text.Json;
 using SoVUtilities.Models;
 using Unity.Entities;
+using System.Collections;
+using UnityEngine;
 
 namespace SoVUtilities.Services;
 
@@ -12,6 +14,12 @@ public static class PlayerDataService
   public static readonly string HUMAN_TAG = "human";
   // Main data store - list of all player data
   private static List<PlayerData> _playerDataList = new List<PlayerData>();
+  // Dictionary cache for O(1) lookups by GuidHash
+  private static Dictionary<int, PlayerData> _playerDataCache = new Dictionary<int, PlayerData>();
+  // Dirty flag and periodic save
+  private static bool _dataDirty = false;
+  private static bool _periodicSaveCoroutineRunning = false;
+  private const float PERIODIC_SAVE_INTERVAL = 30f;
 
   private static void MigrateLegacyPlayerData()
   {
@@ -74,19 +82,30 @@ public static class PlayerDataService
     string characterName = characterEntity.GetUser().CharacterName.ToString();
     if (string.IsNullOrEmpty(characterName)) characterName = "Unknown DAFUQ HAPPENED";
 
-    int guidHash = 0;
-    if (Core.EntityManager.HasComponent<ProjectM.SequenceGUID>(characterEntity))
-    {
-      var seqGuid = Core.EntityManager.GetComponentData<ProjectM.SequenceGUID>(characterEntity);
-      guidHash = seqGuid.GuidHash;
-    }
+    int guidHash = GetGuidHash(characterEntity);
 
-    // Try to find by GUID hash
+    // Fast path: O(1) cache lookup
+    if (guidHash != 0 && _playerDataCache.TryGetValue(guidHash, out var cached))
+      return cached;
+
+    // Slow path: find or create player data
+    return GetOrCreatePlayerData(guidHash, characterName, characterEntity);
+  }
+
+  private static PlayerData GetOrCreatePlayerData(int guidHash, string characterName, Entity characterEntity)
+  {
+    ulong steamId = characterEntity.GetSteamId();
+
+    // Try to find by GUID hash in list
     if (guidHash != 0)
     {
       var guidData = _playerDataList.Find(pd => pd.GuidHash == guidHash);
       if (guidData != null)
+      {
+        // Add to cache for next time
+        _playerDataCache[guidHash] = guidData;
         return guidData;
+      }
     }
 
     // Try to find legacy by CharacterName and GuidHash == 0
@@ -97,6 +116,7 @@ public static class PlayerDataService
       Core.EntityManager.AddComponentData(characterEntity, newGuid);
       legacyByName.GuidHash = newGuid.GuidHash;
       guidHash = newGuid.GuidHash;
+      _playerDataCache[guidHash] = legacyByName;
       SaveData();
       return legacyByName;
     }
@@ -112,8 +132,10 @@ public static class PlayerDataService
     {
       var newGuid = new ProjectM.SequenceGUID(newData.GuidHash);
       Core.EntityManager.AddComponentData(characterEntity, newGuid);
+      guidHash = newData.GuidHash;
     }
     _playerDataList.Add(newData);
+    _playerDataCache[guidHash] = newData;
     SaveData();
     return newData;
   }
@@ -131,6 +153,34 @@ public static class PlayerDataService
   }
 
   public static void SaveData()
+  {
+    MarkDirty();
+  }
+
+  public static void MarkDirty()
+  {
+    _dataDirty = true;
+    if (!_periodicSaveCoroutineRunning)
+    {
+      Core.StartCoroutine(PeriodicSaveCoroutine());
+      _periodicSaveCoroutineRunning = true;
+    }
+  }
+
+  private static IEnumerator PeriodicSaveCoroutine()
+  {
+    while (true)
+    {
+      yield return new WaitForSeconds(PERIODIC_SAVE_INTERVAL);
+      if (_dataDirty)
+      {
+        FlushSaveToDisk();
+        _dataDirty = false;
+      }
+    }
+  }
+
+  public static void FlushSaveToDisk()
   {
     try
     {
@@ -153,12 +203,32 @@ public static class PlayerDataService
         string json = File.ReadAllText(SavePath);
         _playerDataList = JsonSerializer.Deserialize<List<PlayerData>>(json)
           ?? new List<PlayerData>();
+
+        // Rebuild cache
+        _playerDataCache.Clear();
+        foreach (var playerData in _playerDataList)
+        {
+          if (playerData.GuidHash != 0)
+            _playerDataCache[playerData.GuidHash] = playerData;
+        }
       }
       catch (Exception ex)
       {
         Core.Log.LogError($"Failed to load player data: {ex.Message}");
         _playerDataList = new List<PlayerData>();
+        _playerDataCache.Clear();
       }
     }
+  }
+
+  private static int GetGuidHash(Entity characterEntity)
+  {
+    int guidHash = 0;
+    if (Core.EntityManager.HasComponent<ProjectM.SequenceGUID>(characterEntity))
+    {
+      var seqGuid = Core.EntityManager.GetComponentData<ProjectM.SequenceGUID>(characterEntity);
+      guidHash = seqGuid.GuidHash;
+    }
+    return guidHash;
   }
 }

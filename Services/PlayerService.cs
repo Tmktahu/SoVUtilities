@@ -28,6 +28,8 @@ internal class PlayerService
   readonly Dictionary<NetworkId, PlayerData> idPlayerCache = [];
   readonly HashSet<string> playersUnderCorrection = new();
   readonly EntityManager EntityManager = Core.EntityManager;
+  private int tick = 0;
+  internal static readonly HashSet<Entity> ConvertedSpiders = [];
 
   internal bool TryFindSteam(ulong steamId, out PlayerCacheData playerData)
   {
@@ -89,8 +91,8 @@ internal class PlayerService
       // handling for our global stats buff
       foreach (var userEntity in GetUsersOnline())
       {
-        var userData = Core.EntityManager.GetComponentData<User>(userEntity);
-        var charEntity = userData.LocalCharacter._Entity;
+        // var userData = Core.EntityManager.GetComponentData<User>(userEntity);
+        // var charEntity = userData.LocalCharacter._Entity;
 
         // if (!charEntity.Equals(Entity.Null))
         // {
@@ -107,11 +109,24 @@ internal class PlayerService
         }
       }
 
+      // if (tick % 60 == 0)
+      // {
+      //   Core.Log.LogInfo($"[PlayerService.PlayerLoop] - Running batch spider to bush conversion");
+      //   BuffService.TurnSpidersIntoBushesBatch();
+      // }
+
+      // if (tick % 300 == 0)
+      // {
+      //   BuffService.CleanupConvertedSpiders();
+      // }
+
       if (Core.RegionService != null)
       {
         Core.RegionService.ResetForceUpdateFlag();
       }
 
+      tick++;
+      if (tick >= 10000) tick = 0; // prevent overflow
       yield return null;
     }
   }

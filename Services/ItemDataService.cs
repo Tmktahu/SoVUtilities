@@ -4,6 +4,8 @@ using SoVUtilities.Models;
 using SoVUtilities.Resources;
 using Stunlock.Core;
 using Unity.Entities;
+using System.Collections;
+using UnityEngine;
 
 namespace SoVUtilities.Services;
 
@@ -23,6 +25,10 @@ public static class ItemDataService
   private static readonly string SavePath = Path.Combine(SaveDirectory, "sov_utilities_item_data.json");
   private static List<ItemData> _itemDataList = new List<ItemData>();
   private static Dictionary<int, ItemData> _itemDataCache = new Dictionary<int, ItemData>();
+  // Dirty flag and periodic save
+  private static bool _dataDirty = false;
+  private static bool _periodicSaveCoroutineRunning = false;
+  private const float PERIODIC_SAVE_INTERVAL = 30f;
 
   public static void Initialize()
   {
@@ -40,15 +46,15 @@ public static class ItemDataService
     {
       var seqGuid = Core.EntityManager.GetComponentData<SequenceGUID>(itemEntity);
       guidHash = seqGuid.GuidHash;
-      Core.Log.LogInfo($"Checking ItemData for entity {itemEntity} with Sequence GUID hash {guidHash}");
+      // Core.Log.LogInfo($"Checking ItemData for entity {itemEntity} with Sequence GUID hash {guidHash}");
     }
 
     // Try to find by GUID hash
     if (guidHash != 0)
     {
-      Core.Log.LogInfo($"Looking up ItemData in cache for GUID hash {guidHash}");
+      // Core.Log.LogInfo($"Looking up ItemData in cache for GUID hash {guidHash}");
       var hasData = _itemDataCache.ContainsKey(guidHash);
-      Core.Log.LogInfo($"Has ItemData: {hasData}");
+      // Core.Log.LogInfo($"Has ItemData: {hasData}");
       return hasData;
     }
 
@@ -62,15 +68,15 @@ public static class ItemDataService
     {
       var seqGuid = Core.EntityManager.GetComponentData<SequenceGUID>(itemEntity);
       guidHash = seqGuid.GuidHash;
-      Core.Log.LogInfo($"Getting ItemData for entity {itemEntity} with Sequence GUID hash {guidHash}");
+      // Core.Log.LogInfo($"Getting ItemData for entity {itemEntity} with Sequence GUID hash {guidHash}");
     }
 
     // Try to find by GUID hash
     if (guidHash != 0)
     {
-      Core.Log.LogInfo($"Looking up ItemData in cache for GUID hash {guidHash}");
+      // Core.Log.LogInfo($"Looking up ItemData in cache for GUID hash {guidHash}");
       var guidData = _itemDataCache.ContainsKey(guidHash) ? _itemDataCache[guidHash] : default;
-      Core.Log.LogInfo($"Found ItemData: PrefabGUIDName={guidData.PrefabGUIDName}, SequenceGuidHash={guidData.SequenceGuidHash}");
+      // Core.Log.LogInfo($"Found ItemData: PrefabGUIDName={guidData.PrefabGUIDName}, SequenceGuidHash={guidData.SequenceGuidHash}");
       if (guidData.PrefabGUIDName != "" && guidData.SequenceGuidHash != 0)
         return guidData;
     }
@@ -109,6 +115,34 @@ public static class ItemDataService
 
   public static void SaveData()
   {
+    MarkDirty();
+  }
+
+  public static void MarkDirty()
+  {
+    _dataDirty = true;
+    if (!_periodicSaveCoroutineRunning)
+    {
+      Core.StartCoroutine(PeriodicSaveCoroutine());
+      _periodicSaveCoroutineRunning = true;
+    }
+  }
+
+  private static IEnumerator PeriodicSaveCoroutine()
+  {
+    while (true)
+    {
+      yield return new WaitForSeconds(PERIODIC_SAVE_INTERVAL);
+      if (_dataDirty)
+      {
+        FlushSaveToDisk();
+        _dataDirty = false;
+      }
+    }
+  }
+
+  public static void FlushSaveToDisk()
+  {
     try
     {
       // Save as a single JSON array
@@ -138,8 +172,8 @@ public static class ItemDataService
           _itemDataCache[itemData.SequenceGuidHash] = itemData;
         }
 
-        Core.Log.LogInfo($"Loaded {_itemDataList.Count} item data entries from {SavePath}.");
-        Core.Log.LogInfo($"Loaded {_itemDataCache.Count} item data entries into cache.");
+        // Core.Log.LogInfo($"Loaded {_itemDataList.Count} item data entries from {SavePath}.");
+        // Core.Log.LogInfo($"Loaded {_itemDataCache.Count} item data entries into cache.");
       }
       catch (Exception ex)
       {

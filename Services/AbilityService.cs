@@ -1,10 +1,6 @@
 using Unity.Entities;
 using Stunlock.Core;
 using ProjectM;
-using SoVUtilities.Models;
-using SoVUtilities.Services;
-using Il2CppSystem;
-using Unity.Collections;
 using SoVUtilities.Resources;
 using UnityEngine;
 using System.Collections;
@@ -200,7 +196,7 @@ public static class AbilityService
   {
     PrefabGUIDs.AB_Shapeshift_Wolf_Bite_Group._Value, // Primary auto attack slot
     PrefabGUIDs.AB_Wolf_Boss_Pounce_AbilityGroup._Value, // Secondary Q slot
-    PrefabGUIDs.AB_Shapeshift_Wolf_Leap_Travel_AbilityGroup._Value, // Travel slot, spacebar
+    0, // PrefabGUIDs.AB_Shapeshift_Wolf_Leap_Travel_AbilityGroup._Value, // Travel slot, spacebar
     0, // shift slot
     PrefabGUIDs.AB_Wolf_Shared_DashAttack_AbilityGroup._Value, // Power slot E
     -1, // first spell slot R, clear it completely
@@ -339,7 +335,7 @@ public static class AbilityService
     var itemData = ItemDataService.GetItemData(itemEntity);
 
     itemData.AbilityGUIDs[(int)targetSlot] = abilityPrefab.GuidHash;
-    ItemDataService.SaveData();
+    ItemDataService.MarkDirty();
   }
 
   public static void ClearItemAbility(Entity itemEntity, AbilityTypeEnum targetSlot)
@@ -348,7 +344,7 @@ public static class AbilityService
     var itemData = ItemDataService.GetItemData(itemEntity);
 
     itemData.AbilityGUIDs[(int)targetSlot] = 0; // 0 means empty
-    ItemDataService.SaveData();
+    ItemDataService.MarkDirty();
   }
 
   public static void ClearAllItemAbilities(Entity itemEntity)
@@ -359,7 +355,7 @@ public static class AbilityService
     {
       itemData.AbilityGUIDs[i] = 0; // 0 means empty
     }
-    ItemDataService.SaveData();
+    ItemDataService.MarkDirty();
   }
 
   public static void ApplyAbilities(Entity playerEntity, Entity buffEntity, int[] abilitySlotPrefabGUIDs, int groupPriority = 1)
@@ -456,13 +452,14 @@ public static class AbilityService
   public static IEnumerator RefreshEquipBuff(Entity playerEntity)
   {
     PrefabGUID currentEquipBuff = PlayerService.GetEquipBuffPrefabGUID(playerEntity);
+    Core.Log.LogInfo($"[AbilityService] - Refreshing equip buff {currentEquipBuff} for player {playerEntity}");
     // to refresh the equip buff, we remove it and re-apply it
     if (BuffService.HasBuff(playerEntity, currentEquipBuff))
     {
       BuffService.RemoveBuff(playerEntity, currentEquipBuff);
     }
 
-    // yield return new WaitForSeconds(0.5f); // wait a short moment to ensure the buff is removed
+    yield return new WaitForSeconds(0.3f); // wait a short moment to ensure the buff is removed
 
     BuffService.ApplyBuff(playerEntity, currentEquipBuff);
 

@@ -9,6 +9,7 @@ using Unity.Entities;
 using Stunlock.Core;
 using SoVUtilities.Resources;
 using ProjectM.Gameplay.Scripting;
+using System.Reflection;
 
 namespace SoVUtilities.Services;
 
@@ -54,6 +55,88 @@ internal class PrefabService
         EntityManager.SetComponentData(hungerForPowerEffectBuffEntity, empowerBuff);
       }
     }
+
+    // if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Blackfang_Ambush_Buff, out Entity blackfangAmbushBuffEntity))
+    // {
+    //   // it has a ModifyMovementSpeedBuff component we want to delete
+    //   if (EntityManager.TryGetComponentData<BuffModificationFlagData>(blackfangAmbushBuffEntity, out var buffModificationFlagData))
+    //   {
+    //     var modTypes = (BuffModificationTypes)buffModificationFlagData.ModificationTypes;
+    //     Core.Log.LogInfo($"- Blackfang Ambush BuffModificationFlagData ModificationTypes: {modTypes}");
+    //     modTypes &= ~BuffModificationTypes.CastOptionImpair;
+    //     buffModificationFlagData.ModificationTypes = (int)modTypes;
+    //     EntityManager.SetComponentData(blackfangAmbushBuffEntity, buffModificationFlagData);
+    //   }
+
+    //   EntityManager.RemoveComponent<DisableAggroBuff>(blackfangAmbushBuffEntity);
+    //   EntityManager.RemoveComponent<ModifyAggroRangesBuff>(blackfangAmbushBuffEntity);
+    // }
+
+    // unsafe
+    // {
+    //   // if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.BloodSpellSchoolAsset, out Entity bloodSpellSchoolEntity))
+    //   // {
+    //   //   if (EntityManager.TryGetComponentData<NamePostfixGenerator>(bloodSpellSchoolEntity, out var generator))
+    //   //   {
+    //   //     Core.Log.LogInfo($"Length: {generator.Length}");
+
+    //   //     // Convert the struct to raw bytes
+    //   //     byte[] bytes = generator.StructureToByteArray();  // Using your extension
+
+    //   //     Core.Log.LogInfo($"NamePostfixGenerator raw size: {bytes.Length} bytes");
+
+    //   //     // Hex dump in 16-byte rows
+    //   //     for (int i = 0; i < bytes.Length; i += 16)
+    //   //     {
+    //   //       int end = Math.Min(i + 16, bytes.Length);
+    //   //       string hex = BitConverter.ToString(bytes, i, end - i).Replace("-", " ");
+    //   //       Core.Log.LogInfo($"Offset {i:D3}: {hex}");
+    //   //     }
+    //   //   }
+    //   // }
+
+    //   if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.Item_Weapon_Sword_Legendary_NameGenerator_T06, out Entity nameGeneratorEntity))
+    //   {
+    //     if (EntityManager.TryGetComponentData<NamePostfixGenerator>(nameGeneratorEntity, out var generator))
+    //     {
+    //       Core.Log.LogInfo($"Length: {generator.Length}");
+
+    //       byte[] bytes = VExtensions.StructureToByteArray(generator);
+
+    //       Core.Log.LogInfo($"NamePostfixGenerator raw size: {bytes.Length} bytes");
+
+    //       for (int i = 0; i < bytes.Length; i += 16)
+    //       {
+    //         int end = Math.Min(i + 16, bytes.Length);
+    //         string hex = BitConverter.ToString(bytes, i, end - i).Replace("-", " ");
+    //         Core.Log.LogInfo($"Offset {i:D3}: {hex}");
+    //       }
+    //     }
+    //   }
+    // }
+
+
+    // if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Vampire_Dracula_WolfLeap_ShapeshiftBuff, out Entity kalnirBuffEntity))
+    // {
+    //   // it has an EmpowerBuff component we want to edit
+    //   if (EntityManager.TryGetBuffer<PlaySequenceOnGameplayEvent>(kalnirBuffEntity, out var playSequenceBuffer))
+    //   {
+    //     Core.Log.LogInfo($"Clearing PlaySequenceOnGameplayEvent buffer on Kalnir buff to remove leap effect.");
+    //     playSequenceBuffer.Clear(); // remove the leap effect
+    //   }
+
+    //   if (EntityManager.TryGetBuffer<CreateGameplayEventsOnSpawn>(kalnirBuffEntity, out var createGameplayEventBuffer))
+    //   {
+    //     Core.Log.LogInfo($"Clearing CreateGameplayEventsOnSpawn buffer on Kalnir buff to remove leap effect.");
+    //     createGameplayEventBuffer.Clear(); // remove the leap effect
+    //   }
+
+    //   if (EntityManager.TryGetBuffer<GameplayEventListeners>(kalnirBuffEntity, out var gameplayEventListeners))
+    //   {
+    //     Core.Log.LogInfo($"Clearing GameplayEventListeners buffer on Kalnir buff to remove leap effect.");
+    //     gameplayEventListeners.Clear(); // remove the leap effect
+    //   }
+    // }
 
     /// ===============================
     /// Shapeshift Buff Modifications
@@ -161,7 +244,7 @@ internal class PrefabService
       }
     }
 
-    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Spider_Forest_BackStep_Cast, out Entity spiderFormBackstepCastEntity))
+    if (SystemService.PrefabCollectionSystem._PrefabGuidToEntityMap.TryGetValue(PrefabGUIDs.AB_Spider_Melee_BackStep_Cast, out Entity spiderFormBackstepCastEntity))
     {
       // it has a AbilityCooldownData component we want to edit
       if (EntityManager.TryGetComponentData<AbilityCooldownData>(spiderFormBackstepCastEntity, out var abilityCooldownData))

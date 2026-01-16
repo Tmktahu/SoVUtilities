@@ -10,6 +10,8 @@ using System.Collections;
 using SoVUtilities.Services.Buffs;
 using UnityEngine;
 using ProjectM.Gameplay.Scripting;
+using Unity.Transforms;
+using Unity.Mathematics;
 
 namespace SoVUtilities.Services;
 
@@ -40,6 +42,10 @@ internal static class BuffService
   public static string WolfSpeedBuffId = "wolf_speed_buff";
   public static string FaeBuffId = "fae_buff";
   public static string DaemonBuffId = "daemon_buff";
+  public static string RotlingGlowBuffId = "rotling_glow_buff";
+  public static string KalldenBuffId = "kallden_buff";
+  public static string BlindnessBuffId = "blindness_buff";
+
   public static readonly Dictionary<string, ICustomBuff> AvailableBuffs = new()
   {
     // { GlobalStatsBuffId, new GlobalStatsCustomBuff() },
@@ -55,7 +61,10 @@ internal static class BuffService
     { WerewolfStatsBuffId, new WerewolfStatsCustomBuff() },
     { RotlingBuffId, new RotlingCustomBuff() },
     { FaeBuffId, new FaeCustomBuff() },
-    { DaemonBuffId, new DaemonCustomBuff() }
+    { DaemonBuffId, new DaemonCustomBuff() },
+    { RotlingGlowBuffId, new RotlingGlowCustomBuff() },
+    { KalldenBuffId, new KalldenCustomBuff() },
+    { BlindnessBuffId, new BlindnessCustomBuff() }
   };
 
   public static void ApplyBuff(Entity entity, PrefabGUID buffPrefabGuid)
@@ -316,6 +325,129 @@ internal static class BuffService
     {
       ApplyBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_Landing_Travel_End);
       RemoveBuff(characterEntity, PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff);
+    }
+  }
+
+  public static IEnumerator TurnSpidersIntoBushes(Entity characterEntity)
+  {
+    // we want to get all spiders around the player
+    var spiderEntities = EntityService.GetNearbySpiders(characterEntity, 50f);
+    foreach (var spiderEntity in spiderEntities)
+    {
+      // we want to apply the bush buff to the spider
+      if (!HasBuff(spiderEntity, PrefabGUIDs.AB_Blackfang_Ambush_Buff))
+      {
+        ApplyPermanentBuff(spiderEntity, PrefabGUIDs.AB_Blackfang_Ambush_Buff);
+      }
+    }
+    yield return null;
+  }
+
+  public static void TurnSpidersIntoBushesBatch(float radius = 50f)
+  {
+    var spiderQuery = QueryService.SpidersQuery;
+    if (spiderQuery.CalculateEntityCount() == 0)
+    {
+      return;
+    }
+
+    var radiusSqued = radius * radius;
+    var spiderKeywords = EntityService.SpiderKeywords;
+
+    NativeArray<Entity> spiderEntites = spiderQuery.ToEntityArray(Allocator.Temp);
+    var prefabLookup = EntityManager.GetComponentLookup<PrefabGUID>(true);
+    var translonLookup = EntityManager.GetComponentLookup<Translation>(true);
+
+    var onlineUsers = PlayerService.GetUsersOnline();
+
+    var playerPosions = new System.Collections.Generic.List<(float3 position, Entity character)>();
+    foreach (var userEntiy in onlineUsers)
+    {
+      if (EntityManager.Exists(userEntiy))
+      {
+        var userDta = EntityManager.GetComponentData<User>(userEntiy);
+        var charEntiy = userDta.LocalCharacter._Entity;
+        if (charEntiy.Exists() && EntityManager.HasComponent<Translation>(charEntiy))
+        {
+          var pos = EntityManager.GetComponentData<Translation>(charEntiy).Value;
+          playerPosions.Add((pos, charEntiy));
+        }
+      }
+    }
+
+    for (int i = 0; i < spiderEntites.Length; i++)
+    {
+      var spiderEntiy = spiderEntites[i];
+
+      if (PlayerService.ConvertedSpiders.Contains(spiderEntiy))
+      {
+        continue;
+      }
+
+      if (!prefabLookup.HasComponent(spiderEntiy) || !translonLookup.HasComponent(spiderEntiy))
+      {
+        continue;
+      }
+
+      var prefabGuid = prefabLookup[spiderEntiy];
+      var prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(prefabGuid);
+
+      bool isSpider = false;
+      foreach (var keyword in spiderKeywords)
+      {
+        if (prefabName.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+          isSpider = true;
+          break;
+        }
+      }
+
+      if (!isSpider)
+      {
+        continue;
+      }
+
+      var spiderPos = translonLookup[spiderEntiy].Value;
+
+      bool nearPlayer = false;
+      foreach (var player in playerPosions)
+      {
+        float3 playerPos = player.position;
+        float distanceSqued =
+          (spiderPos.x - playerPos.x) * (spiderPos.x - playerPos.x) +
+          (spiderPos.y - playerPos.y) * (spiderPos.y - playerPos.y) +
+          (spiderPos.z - playerPos.z) * (spiderPos.z - playerPos.z);
+
+        if (distanceSqued <= radiusSqued)
+        {
+          nearPlayer = true;
+          break;
+        }
+      }
+
+      if (nearPlayer && !HasBuff(spiderEntiy, PrefabGUIDs.AB_Blackfang_Ambush_Buff))
+      {
+        ApplyPermanentBuff(spiderEntiy, PrefabGUIDs.AB_Blackfang_Ambush_Buff);
+        PlayerService.ConvertedSpiders.Add(spiderEntiy);
+      }
+    }
+
+    spiderEntites.Dispose();
+  }
+
+  public static void CleanupConvertedSpiders()
+  {
+    var entitesToRem = new System.Collections.Generic.List<Entity>();
+    foreach (var spiderEntiy in PlayerService.ConvertedSpiders)
+    {
+      if (!EntityManager.Exists(spiderEntiy))
+      {
+        entitesToRem.Add(spiderEntiy);
+      }
+    }
+    foreach (var entity in entitesToRem)
+    {
+      PlayerService.ConvertedSpiders.Remove(entity);
     }
   }
 }

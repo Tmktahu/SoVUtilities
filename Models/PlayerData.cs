@@ -7,6 +7,7 @@ public class PlayerData
   public int GuidHash { get; set; }
   public bool HideAdminStatus { get; set; } = false;
   public bool DisableHideNameplate { get; set; } = false;
+  public bool ShapeshiftDamageImmunity { get; set; } = false;
   public List<string> Tags { get; set; } = new List<string>();
   public DateTime? LastBloodPotionTime { get; set; }
   public int[] AbilitySlotPrefabGUIDs { get; set; } = new int[8];

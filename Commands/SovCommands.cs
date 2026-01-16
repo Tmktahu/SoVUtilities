@@ -7,7 +7,6 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Stunlock.Core;
 using ProjectM;
-using SoVUtilities.Services.Buffs;
 
 namespace SoVUtilities.Commands;
 
@@ -402,7 +401,7 @@ internal static class SovCommands
     }
 
     playerData.HideAdminStatus = hideStatusBool;
-    PlayerDataService.SaveData();
+    PlayerDataService.MarkDirty();
 
     ctx.Reply($"Your admin status will now be {(hideStatusBool ? "hidden" : "visible")} in chat.");
   }
@@ -438,9 +437,45 @@ internal static class SovCommands
     }
 
     playerData.DisableHideNameplate = revealStatusBool;
-    PlayerDataService.SaveData();
+    PlayerDataService.MarkDirty();
 
     ctx.Reply($"Your nameplate will now {(revealStatusBool ? "always be visible" : "follow normal hiding rules")}.");
+  }
+
+  // a command to toggle shapeshift damage immunity
+  [Command("shapeshift immunity", "Toggle shapeshift damage immunity (maintain shapeshift form when taking damage)", adminOnly: true)]
+  public static void ToggleShapeshiftImmunityCommand(ChatCommandContext ctx, string immunityStatus = null)
+  {
+    Entity playerEntity = ctx.Event.SenderCharacterEntity;
+    var playerData = PlayerDataService.GetPlayerData(playerEntity);
+
+    bool immunityStatusBool;
+    if (string.Equals(immunityStatus, "true", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(immunityStatus, "yes", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(immunityStatus, "1", StringComparison.OrdinalIgnoreCase))
+    {
+      immunityStatusBool = true;
+    }
+    else if (string.Equals(immunityStatus, "false", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(immunityStatus, "no", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(immunityStatus, "0", StringComparison.OrdinalIgnoreCase))
+    {
+      immunityStatusBool = false;
+    }
+    else if (string.IsNullOrEmpty(immunityStatus))
+    {
+      immunityStatusBool = !playerData.ShapeshiftDamageImmunity;
+    }
+    else
+    {
+      ctx.Reply("Invalid argument. Use 'true', 'false', or leave empty to toggle.");
+      return;
+    }
+
+    playerData.ShapeshiftDamageImmunity = immunityStatusBool;
+    PlayerDataService.MarkDirty();
+
+    ctx.Reply($"You are now {(immunityStatusBool ? "immune" : "vulnerable")} to being knocked out of shapeshift forms when taking damage.");
   }
 
   // command to spawn a sequence from sequence GUID onto the player
@@ -497,7 +532,7 @@ internal static class SovCommands
       }
       else
       {
-        ctx.Reply($"Invalid dice notation '{diceNotation}'. Please use NdM format (e.g., 2d6).");
+        ctx.Reply(diceResult.ResultText);
       }
     }
     catch (Exception ex)

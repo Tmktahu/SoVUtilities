@@ -15,18 +15,22 @@ public class DiceResult
   public bool Valid { get; set; } = false;
   public int Result { get; set; }
   public string ResultText { get; set; }
+  public int NumberOfDice { get; set; }
 }
 
 public static class DiceService
 {
+  private const int MaxDiceCount = 100;
+  private const int MaxSides = 100;
+  private const int DetailDisplayThreshold = 5;
   public static DiceResult RollDice(string diceExpression)
   {
-    Core.Log.LogInfo($"RollDice input: '{diceExpression}'");
+    // Core.Log.LogInfo($"RollDice input: '{diceExpression}'");
     var regex = new System.Text.RegularExpressions.Regex(@"^\s*(\d+)d(\d+)([+-]\d+)?\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     var match = regex.Match(diceExpression);
     if (!match.Success || int.Parse(match.Groups[1].Value) <= 0 || int.Parse(match.Groups[2].Value) <= 0)
     {
-      Core.Log.LogError($"RollDice: Invalid dice expression '{diceExpression}'");
+      // Core.Log.LogError($"RollDice: Invalid dice expression '{diceExpression}'");
       return new DiceResult
       {
         Valid = false,
@@ -37,12 +41,33 @@ public static class DiceService
 
     int numberOfDice = int.Parse(match.Groups[1].Value);
     int sides = int.Parse(match.Groups[2].Value);
+    
+    if (numberOfDice > MaxDiceCount)
+    {
+      return new DiceResult
+      {
+        Valid = false,
+        Result = 0,
+        ResultText = "Maximum dice count is 100"
+      };
+    }
+    
+    if (sides > MaxSides)
+    {
+      return new DiceResult
+      {
+        Valid = false,
+        Result = 0,
+        ResultText = "Maximum dice sides is 100"
+      };
+    }
+    
     int modifier = 0;
     if (match.Groups[3].Success)
     {
       modifier = int.Parse(match.Groups[3].Value);
     }
-    Core.Log.LogInfo($"RollDice parsed: numberOfDice={numberOfDice}, sides={sides}, modifier={modifier}");
+    // Core.Log.LogInfo($"RollDice parsed: numberOfDice={numberOfDice}, sides={sides}, modifier={modifier}");
 
     var random = new Random();
     int total = 0;
@@ -68,7 +93,8 @@ public static class DiceService
     {
       Valid = true,
       Result = total,
-      ResultText = resultText.ToString()
+      ResultText = resultText.ToString(),
+      NumberOfDice = numberOfDice
     };
   }
 
@@ -76,10 +102,10 @@ public static class DiceService
   {
     try
     {
-      Core.Log.LogInfo($"CheckSyntax input: '{diceExpression}'");
+      // Core.Log.LogInfo($"CheckSyntax input: '{diceExpression}'");
       var regex = new System.Text.RegularExpressions.Regex(@"^\s*(\d+)d(\d+)([+-]\d+)?\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
       var match = regex.Match(diceExpression);
-      Core.Log.LogInfo($"Regex match success: {match.Success}");
+      // Core.Log.LogInfo($"Regex match success: {match.Success}");
       return match.Success && int.Parse(match.Groups[1].Value) > 0 && int.Parse(match.Groups[2].Value) > 0;
     }
     catch (Exception ex)
@@ -95,7 +121,7 @@ public static class DiceService
     var nearbyUserEntities = EntityService.GetNearbyUserEntities(playerEntity, 45f); // local range
     if (nearbyUserEntities.Count == 0)
     {
-      Core.Log.LogInfo($"ChatMessageSystem: No nearby players found for entity {playerEntity}");
+      // Core.Log.LogInfo($"ChatMessageSystem: No nearby players found for entity {playerEntity}");
       return;
     }
 
@@ -115,7 +141,9 @@ public static class DiceService
       // target message format is
       // NAME rolled DICE_NOTATION and got: RESULT (RESULT_TEXT)
 
-      var message = new FixedString512Bytes($"*{playerName} rolled and got: {diceResult.Result} ({diceResult.ResultText})*");
+      var message = diceResult.NumberOfDice > DetailDisplayThreshold 
+        ? new FixedString512Bytes($"*{playerName} rolled and got: {diceResult.Result}*")
+        : new FixedString512Bytes($"*{playerName} rolled and got: {diceResult.Result} ({diceResult.ResultText})*");
       var toConnectedUserIndex = userApprovedIndex;
       NetworkId fromNetworkId = playerEntity.GetNetworkId();
       long timestamp = (long)Core.ServerGameManager.ServerTime;
@@ -132,7 +160,9 @@ public static class DiceService
 
     // we pretty much prepare the message to be sent to discord and then call the discord service for sending
     // we need to include who rolled, what they rolled, and what the result was
-    string message = $"**{playerName}** rolled **{diceNotation}** and got: **{diceResult.Result}** (`{diceResult.ResultText}`)";
+    string message = diceResult.NumberOfDice > DetailDisplayThreshold
+      ? $"**{playerName}** rolled **{diceNotation}** and got: **{diceResult.Result}**"
+      : $"**{playerName}** rolled **{diceNotation}** and got: **{diceResult.Result}** (`{diceResult.ResultText}`)";
     DiscordWebhookService.SendMessageToWebhook(message);
   }
 }

@@ -30,13 +30,6 @@ internal static class ScriptSpawnServerPatch
   static readonly PrefabGUID ShapeshiftHumanBuff = PrefabGUIDs.AB_Shapeshift_Human_Buff;
   static readonly PrefabGUID ShapeshiftHumanSkin01Buff = PrefabGUIDs.AB_Shapeshift_Human_Grandma_Skin01_Buff;
   static readonly PrefabGUID ShapeshiftHumanSkin02Buff = PrefabGUIDs.AB_Shapeshift_Human_PMK_Skin02_Buff;
-  static readonly PrefabGUID HorseMountBuff = PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse;
-  static readonly PrefabGUID VampireHorseMountBuff = PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire;
-  static readonly PrefabGUID VampireBlackfangHorseMountBuff = PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_Blackfang;
-  static readonly PrefabGUID VampireGloomrotHorseMountBuff = PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_Gloomrot;
-  static readonly PrefabGUID VampirePMKSkeletonHorseMountBuff = PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_PMKSkeleton;
-
-
 
   static readonly PrefabGUID[] nameplateDisabledForms = new PrefabGUID[]
   {
@@ -80,7 +73,7 @@ internal static class ScriptSpawnServerPatch
 
         if (targetIsPlayer)
         {
-          Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
+          // Core.Log.LogInfo($"[ScriptSpawnServer.OnUpdatePrefix] - Player Buff Applied: {prefabGuid} to {buffTarget}");
           var playerData = PlayerDataService.GetPlayerData(buffTarget);
 
           if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Buff) || prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bear_Skin01_Buff))
@@ -98,12 +91,25 @@ internal static class ScriptSpawnServerPatch
 
           if (prefabGuid.Equals(PrefabGUIDs.AB_Shapeshift_Bat_TakeFlight_Buff))
           {
-            if (playerData.HasTag(TagService.Tags.HUMAN) || playerData.HasTag(TagService.Tags.WEREWOLF))
+            if (playerData.HasTag(TagService.Tags.HUMAN) || playerData.HasTag(TagService.Tags.WEREWOLF) || playerData.HasTag(TagService.Tags.DAEMON) || playerData.HasTag(TagService.Tags.FAE))
             {
               entities[i].Destroy();
               User user = buffTarget.GetUser();
-              FixedString512Bytes message = new FixedString512Bytes("You are not a vampire or daemon. Doofus.");
+              FixedString512Bytes message = new FixedString512Bytes("You are not a vampire. Doofus.");
               ServerChatUtils.SendSystemMessageToClient(__instance.EntityManager, user, ref message);
+              continue;
+            }
+          }
+
+          if (prefabGuid.Equals(PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse) ||
+              prefabGuid.Equals(PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire) ||
+              prefabGuid.Equals(PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_Blackfang) ||
+              prefabGuid.Equals(PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_PMKSkeleton) ||
+              prefabGuid.Equals(PrefabGUIDs.AB_Interact_Mount_Owner_Buff_Horse_Vampire_Gloomrot))
+          {
+            if (playerData.HasTag(TagService.Tags.WEREWOLF))
+            {
+              entities[i].Destroy();
               continue;
             }
           }
@@ -122,15 +128,6 @@ internal static class ScriptSpawnServerPatch
                     j--; // Adjust index after removal
                   }
                 }
-              }
-            }
-
-            if (prefabGuid.Equals(HorseMountBuff) || prefabGuid.Equals(VampireHorseMountBuff) || prefabGuid.Equals(VampireBlackfangHorseMountBuff) || prefabGuid.Equals(VampirePMKSkeletonHorseMountBuff))
-            {
-              if (playerData.HasTag(TagService.Tags.WEREWOLF))
-              {
-                entities[i].Destroy();
-                continue;
               }
             }
 

@@ -4,12 +4,18 @@ using Unity.Collections;
 using Unity.Transforms;
 using ProjectM;
 using Il2CppInterop.Runtime;
+using SoVUtilities.Resources;
+using Stunlock.Core;
 
 namespace SoVUtilities.Services;
 
 public static class EntityService
 {
   static EntityManager EntityManager => Core.EntityManager;
+  public static readonly List<string> SpiderKeywords = new List<string>
+  {
+      "spider", "arachnid", "ungora", "spiderling", "webweaver"
+  };
 
   public static bool TryFindPlayer(string playerName, out Entity playerEntity, out Entity userEntity)
   {
@@ -99,6 +105,61 @@ public static class EntityService
         {
           nearbyEntities.Add(entity);
         }
+      }
+    }
+
+    return nearbyEntities;
+  }
+
+  public static List<Entity> GetNearbySpiders(Entity playerEntity, float radius = 10f)
+  {
+    List<Entity> nearbyEntities = new List<Entity>();
+    if (!EntityManager.HasComponent<Translation>(playerEntity))
+      return nearbyEntities;
+
+    var playerPos = EntityManager.GetComponentData<Translation>(playerEntity).Value;
+
+    var query = EntityManager.CreateEntityQuery(
+      ComponentType.ReadOnly<Translation>(),
+      ComponentType.ReadOnly<PrefabGUID>(),
+      ComponentType.ReadOnly<AbilityBar_Shared>(),
+      ComponentType.ReadOnly<BuffResistances>(),
+      ComponentType.ReadOnly<Buffable>()
+    );
+    var entities = query.ToEntityArray(Allocator.Temp);
+
+    foreach (var entity in entities)
+    {
+      if (EntityManager.HasComponent<Translation>(entity) && EntityManager.HasComponent<PrefabGUID>(entity))
+      {
+        var prefabGuid = EntityManager.GetComponentData<PrefabGUID>(entity);
+        string prefabName = PrefabGUIDsExtensions.GetPrefabGUIDName(prefabGuid);
+        // Core.Log.LogInfo($"Checking entity {entity} with prefab name '{prefabName}'");
+
+        bool isSpider = false;
+        foreach (var keyword in SpiderKeywords)
+        {
+          if (prefabName.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+          {
+            isSpider = true;
+            break;
+          }
+        }
+
+        if (isSpider && EntityManager.TryGetComponentData<Translation>(entity, out var translation))
+        {
+          var entityPos = translation.Value;
+          float distance =
+              (entityPos.x - playerPos.x) * (entityPos.x - playerPos.x) +
+              (entityPos.y - playerPos.y) * (entityPos.y - playerPos.y) +
+              (entityPos.z - playerPos.z) * (entityPos.z - playerPos.z);
+
+          if (distance <= radius * radius)
+          {
+            nearbyEntities.Add(entity);
+          }
+        }
+
       }
     }
 

@@ -5,6 +5,7 @@ using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 using VampireCommandFramework;
+using SoVUtilities.Services;
 using static SoVUtilities.Services.ConfigService.ConfigInitialization;
 
 namespace SoVUtilities;
@@ -46,6 +47,14 @@ internal class Plugin : BasePlugin
   public override bool Unload()
   {
     _harmony.UnpatchSelf();
+
+    // Final save on clean shutdown
+    if (IsServer)
+    {
+      PlayerDataService.FlushSaveToDisk();
+      ItemDataService.FlushSaveToDisk();
+    }
+
     return true;
   }
 }

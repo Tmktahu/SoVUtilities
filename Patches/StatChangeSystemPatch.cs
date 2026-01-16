@@ -1,4 +1,4 @@
-﻿using static SoVUtilities.Services.PlayerDataService;
+using static SoVUtilities.Services.PlayerDataService;
 using static SoVUtilities.Services.TagService;
 using HarmonyLib;
 using ProjectM;
@@ -148,16 +148,21 @@ internal static class StatChangeSystemPatch
                             if (shapeshift.IsShapeshifted)
                             {
                                 // Core.Log.LogInfo($"[StatChangeSystem] Target is shapeshifted.");
-                                foreach (PrefabGUID transformationBuff in AbilityService.combatShapeshiftForms)
+                                
+                                var playerData = PlayerDataService.GetPlayerData(targetEntity);
+                                if (!playerData.ShapeshiftDamageImmunity)
                                 {
-                                    if (BuffService.TryGetBuff(targetEntity, transformationBuff, out Entity buffEntity))
+                                    foreach (PrefabGUID transformationBuff in AbilityService.combatShapeshiftForms)
                                     {
-                                        BuffService.DestroyBuff(buffEntity);
-                                        // BuffService.RefreshPlayerBuffs(entityOwner.Owner).Start();
-                                        break;
+                                        if (BuffService.TryGetBuff(targetEntity, transformationBuff, out Entity buffEntity))
+                                        {
+                                            BuffService.DestroyBuff(buffEntity);
+                                            // BuffService.RefreshPlayerBuffs(entityOwner.Owner).Start();
+                                            break;
+                                        }
                                     }
+                                    BuffService.RemoveBatForm(targetEntity);
                                 }
-                                BuffService.RemoveBatForm(targetEntity);
                             }
                         }
 

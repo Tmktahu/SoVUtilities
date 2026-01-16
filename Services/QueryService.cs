@@ -1,4 +1,4 @@
-﻿using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using ProjectM;
 using Stunlock.Core;
@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Entities;
 using ProjectM.Network;
 using ProjectM.Sequencer;
+using Unity.Transforms;
 
 namespace SoVUtilities.Services;
 
@@ -19,6 +20,7 @@ internal static class QueryService
     static readonly EntityQuery _scriptSpawnServerQuery;
     static readonly EntityQuery _playerCharactersQuery;
     static readonly EntityQuery _networkedSequenceQuery;
+    static readonly EntityQuery _spidersQuery;
     static QueryService()
     {
         _updateBuffsBufferDestroyQuery = ModifyEntityQuery(
@@ -43,12 +45,21 @@ internal static class QueryService
         _networkedSequenceQuery = EntityManager.CreateEntityQuery(
             ComponentType.ReadOnly<SpawnSequenceForEntity>()
         );
+
+        _spidersQuery = EntityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<Translation>(),
+            ComponentType.ReadOnly<PrefabGUID>(),
+            ComponentType.ReadOnly<AbilityBar_Shared>(),
+            ComponentType.ReadOnly<BuffResistances>(),
+            ComponentType.ReadOnly<Buffable>()
+        );
     }
     public static EntityQuery UpdateBuffsBufferDestroyQuery => _updateBuffsBufferDestroyQuery;
     public static EntityQuery BuffSpawnServerQuery => _buffSpawnServerQuery;
     public static EntityQuery ScriptSpawnServerQuery => _scriptSpawnServerQuery;
     public static EntityQuery PlayerCharactersQuery => _playerCharactersQuery;
     public static EntityQuery NetworkedSequenceQuery => _networkedSequenceQuery;
+    public static EntityQuery SpidersQuery => _spidersQuery;
     public static EntityQuery ModifyEntityQuery(EntityQuery originalQuery, ComponentType[] includeComponents = null, ComponentType[] excludeComponents = null)
     {
         /*

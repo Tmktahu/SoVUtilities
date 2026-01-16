@@ -1,6 +1,7 @@
 using Unity.Entities;
 using static SoVUtilities.Services.PlayerDataService;
 using SoVUtilities.Models;
+using ProjectM.Shared;
 
 namespace SoVUtilities.Services;
 
@@ -50,6 +51,9 @@ public static class TagService
     public const string WEREWOLF = "werewolf";
     public const string FAE = "fae";
     public const string DAEMON = "daemon";
+    public const string ROTLING_GLOW = "rotling_glow";
+    public const string KALLDEN = "kallden";
+    public const string BLINDNESS = "blindness";
   }
 
   // Check if a tag is valid
@@ -80,6 +84,9 @@ public static class TagService
       Tags.WEREWOLF => true,
       Tags.FAE => true,
       Tags.DAEMON => true,
+      Tags.ROTLING_GLOW => true,
+      Tags.KALLDEN => true,
+      Tags.BLINDNESS => true,
       _ => false
     };
   }
@@ -142,7 +149,9 @@ public static class TagService
     yield return Tags.WEREWOLF;
     yield return Tags.FAE;
     yield return Tags.DAEMON;
-
+    yield return Tags.ROTLING_GLOW;
+    yield return Tags.KALLDEN;
+    yield return Tags.BLINDNESS;
     // Region Tags
     yield return Tags.CURSED_FOREST;
     yield return Tags.DUNLEY_FARMLANDS;
@@ -190,7 +199,10 @@ public static class TagService
     { Tags.WEREWOLF, new[] { BuffService.WerewolfStatsBuffId } },
     { Tags.ROTLING, new[] { BuffService.RotlingBuffId } },
     { Tags.FAE, new[] { BuffService.FaeBuffId } },
-    { Tags.DAEMON, new[] { BuffService.DaemonBuffId } }
+    { Tags.DAEMON, new[] { BuffService.DaemonBuffId } },
+    { Tags.ROTLING_GLOW, new[] { BuffService.RotlingGlowBuffId } },
+    { Tags.KALLDEN, new[] { BuffService.KalldenBuffId } },
+    { Tags.BLINDNESS, new[] { BuffService.BlindnessBuffId } }
   };
 
   public static bool AddPlayerTag(Entity characterEntity, string tag)
@@ -198,7 +210,7 @@ public static class TagService
     var data = GetPlayerData(characterEntity);
     bool added = data.AddTag(tag);
     if (added)
-      SaveData();
+      MarkDirty();
     return added;
   }
 
@@ -212,7 +224,7 @@ public static class TagService
 
     bool removed = data.RemoveTag(tag);
     if (removed)
-      SaveData();
+      MarkDirty();
     return removed;
   }
 

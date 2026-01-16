@@ -72,8 +72,8 @@ internal static class ItemService
       // Update the last blood potion time to now
       playerData.LastBloodPotionTime = DateTime.Now;
 
-      // Save the updated player data
-      PlayerDataService.SaveData();
+      // Mark data as dirty for saving
+      PlayerDataService.MarkDirty();
 
       Core.Log.LogInfo($"GiveHumanBloodPotion successful for player: {playerData.CharacterName} (Steam ID: {playerData.SteamId})");
 
@@ -99,8 +99,16 @@ internal static class ItemService
     return new Entity();
   }
 
+
+
+
   public static void TestItemFunctionality(Entity playerEntity)
   {
+    // NameGeneratorSourceAsset.GetName
+
+
+
+
     if (EntityManager.TryGetBuffer<InventoryInstanceElement>(playerEntity, out var inventoryBuffer))
     {
       Core.Log.LogInfo($"Player {playerEntity} has {inventoryBuffer.Length} items in inventory:");
@@ -131,21 +139,85 @@ internal static class ItemService
 
             PrefabGUID itemEntityPrefabGUID = EntityManager.GetComponentData<PrefabGUID>(itemEntity);
             // Core.Log.LogInfo($"      - Item Entity PrefabGUID: {PrefabGUIDsExtensions.GetPrefabGUIDName(itemEntityPrefabGUID)} ");
-            if (itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Weapon_Sword_T01_Bone))
+            if (itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Jewel_Blood_T02_CarrionSwarm) ||
+                itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Jewel_Chaos_T02_Aftershock))
+            {
+              // it has a GeneratedName component we want to get
+              if (EntityManager.TryGetComponentData<GeneratedName>(itemEntity, out var generatedName))
+              {
+                byte prefixIndex = generatedName.RandomNamePrefix;
+                byte postfixIndex = generatedName.RandomNamePostfix;
+                PrefabGUID prefixNameGenerator = generatedName.NameGeneratorPrefixSource;
+                PrefabGUID postfixNameGenerator = generatedName.NameGeneratorPostfixSource;
+
+                Core.Log.LogInfo($"      - GeneratedName component found on item entity {itemEntity}:");
+                Core.Log.LogInfo($"          - PrefixIndex: {prefixIndex}, PostfixIndex: {postfixIndex}");
+                Core.Log.LogInfo($"          - PrefixNameGenerator: {PrefabGUIDsExtensions.GetPrefabGUIDName(prefixNameGenerator)} ({prefixNameGenerator})");
+                Core.Log.LogInfo($"          - PostfixNameGenerator: {PrefabGUIDsExtensions.GetPrefabGUIDName(postfixNameGenerator)} ({postfixNameGenerator})");
+
+                // generatedName.RandomNamePrefix = 1;
+                // EntityManager.SetComponentData(itemEntity, generatedName);
+
+                // prefix for blood thing 0-24 indexes
+                // postfix for blood thing 0-6, 128-134 indexes
+              }
+              else
+              {
+                Core.Log.LogInfo($"      - No GeneratedName component found on item entity {itemEntity}");
+              }
+            }
+
+            if (itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Weapon_Sword_T01_Bone) ||
+                itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Legs_T04_Copper_Warrior))
             {
               Core.Log.LogInfo($"        - This is a Bone Sword!");
               if (!EntityManager.Exists(itemEntity)) return;
 
-              ItemData itemData = ItemDataService.GetItemData(itemEntity);
-              Core.Log.LogInfo($"        - Retrieved ItemData: PrefabGUIDName={itemData.PrefabGUIDName}, SequenceGuidHash={itemData.SequenceGuidHash}");
+              GeneratedName genName = new GeneratedName
+              {
+                RandomNamePrefix = 1,
+                RandomNamePostfix = 1,
+                NameGeneratorPrefixSource = PrefabGUIDs.BloodSpellSchoolAsset,
+                NameGeneratorPostfixSource = PrefabGUIDs.BloodSpellSchoolAsset
+              };
 
-              // var componentTypes = EntityManager.GetComponentTypes(itemEntity);
-              // Core.Log.LogInfo($"Components on entity '{itemEntity}':");
-              // foreach (var componentType in componentTypes)
-              // {
-              //   Core.Log.LogInfo($"- {componentType.GetManagedType().Name}");
-              // }
+              EntityManager.AddComponentData(itemEntity, genName);
+              Core.Log.LogInfo($"        - Added GeneratedName component to Bone Sword entity {itemEntity}");
+
+              LegendaryItemInstance legendaryItemInstance = new LegendaryItemInstance
+              {
+                TierIndex = 1,
+              };
+
+              EntityManager.AddComponentData(itemEntity, legendaryItemInstance);
+              Core.Log.LogInfo($"        - Added LegendaryItemInstance component to Bone Sword entity {itemEntity}");
+
+              UpgradeableLegendaryItem upgradeableLegendaryItem = new UpgradeableLegendaryItem
+              {
+                CurrentTier = 0,
+                MaxTiers = 3
+              };
+
+              EntityManager.AddComponentData(itemEntity, upgradeableLegendaryItem);
+              Core.Log.LogInfo($"        - Added UpgradeableLegendaryItem component to Bone Sword entity {itemEntity}");
             }
+
+            if (itemEntityPrefabGUID.Equals(PrefabGUIDs.Item_Weapon_Axe_Legendary_T06_Shattered))
+            {
+              if (EntityManager.TryGetComponentData<LegendaryItemInstance>(itemEntity, out var legendaryData))
+              {
+                Core.Log.LogInfo($"        - This is a Shattered Legendary Axe!");
+                Core.Log.LogInfo($"          - Legendary Tier: {legendaryData.TierIndex}");
+              }
+
+              if (EntityManager.TryGetComponentData<UpgradeableLegendaryItem>(itemEntity, out var upgradeableLegendaryData))
+              {
+                Core.Log.LogInfo($"          - Upgradeable Legendary Item Component found:");
+                Core.Log.LogInfo($"            - Current Upgrade Level: {upgradeableLegendaryData.CurrentTier}");
+                Core.Log.LogInfo($"            - Max Upgrade Level: {upgradeableLegendaryData.MaxTiers}");
+              }
+            }
+
           }
         }
         else
@@ -182,18 +254,18 @@ internal static class ItemService
     if (EntityManager.TryGetComponentData(itemEntity, out SequenceGUID guid))
     {
       guidHash = guid.GuidHash;
-      Core.Log.LogInfo($"Item Sequence GUID for entity {itemEntity}: {guidHash}");
+      // Core.Log.LogInfo($"Item Sequence GUID for entity {itemEntity}: {guidHash}");
       return guidHash;
     }
     else
     {
-      Core.Log.LogInfo($"Entity {itemEntity} does not have an ItemUniqueID component.");
+      // Core.Log.LogInfo($"Entity {itemEntity} does not have an ItemUniqueID component.");
       guidHash = Guid.NewGuid().GetHashCode();
       // TODO CHECK IF WE ALREADY HAVE THIS GUID IN USE?
 
       guid = new SequenceGUID(guidHash);
       EntityManager.AddComponentData(itemEntity, guid);
-      Core.Log.LogInfo($"Set Item Sequence GUID for entity {itemEntity} to: {guidHash}");
+      // Core.Log.LogInfo($"Set Item Sequence GUID for entity {itemEntity} to: {guidHash}");
     }
 
     return guidHash;

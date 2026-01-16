@@ -23,7 +23,7 @@
   </ItemGroup>
   
   <Target Name="BuildToClient" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\VRising\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="T:\SteamLibrary\steamapps\common\VRisingDedicatedServer\BepInEx\plugins" />
   </Target>
 
   <ItemGroup>

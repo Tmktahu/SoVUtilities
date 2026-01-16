@@ -143,3 +143,27 @@ public class DaemonCustomBuff : ICustomBuff
   public bool HasBuff(Entity entity) => DaemonBuff.HasBuff(entity);
   public string BuffId => BuffService.DaemonBuffId;
 }
+
+public class RotlingGlowCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity, GlobalStatBuffFlags[] flags = null) => RotlingGlowBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => RotlingGlowBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => RotlingGlowBuff.HasBuff(entity);
+  public string BuffId => BuffService.RotlingGlowBuffId;
+}
+
+public class KalldenCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity, GlobalStatBuffFlags[] flags = null) => KalldenBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => KalldenBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => KalldenBuff.HasBuff(entity);
+  public string BuffId => BuffService.KalldenBuffId;
+}
+
+public class BlindnessCustomBuff : ICustomBuff
+{
+  public void ApplyCustomBuff(Entity targetEntity, GlobalStatBuffFlags[] flags = null) => BlindnessBuff.ApplyCustomBuff(targetEntity).Start();
+  public bool RemoveBuff(Entity entity) => BlindnessBuff.RemoveBuff(entity);
+  public bool HasBuff(Entity entity) => BlindnessBuff.HasBuff(entity);
+  public string BuffId => BuffService.BlindnessBuffId;
+}
